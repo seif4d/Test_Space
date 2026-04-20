@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#060B1A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="محفظتي PRO">
+<meta name="description" content="تطبيقك المالي الذكي لإدارة المصروفات والدخل بأسلوب احترافي">
+<title>محفظتي PRO | إدارة مالية بذكاء</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════════
+   TOKENS & RESET
+════════════════════════════════════════ */
+:root{
+  --bg:#060B1A; --bg2:#0D1426;
+  --surface:rgba(13,22,45,.88);
+  --gold:#D4A843; --gold-l:#F0C060; --gold-dim:rgba(212,168,67,.15); --gold-glow:0 0 20px rgba(212,168,67,.3);
+  --teal:#22D3B0; --teal-dim:rgba(34,211,176,.15);
+  --rose:#FF6B8A; --rose-dim:rgba(255,107,138,.15);
+  --violet:#818CF8; --violet-dim:rgba(129,140,248,.15);
+  --text:#E8EDF8; --muted:#5A6A8A;
+  --border:rgba(212,168,67,.13); --border2:rgba(255,255,255,.07);
+  --r1:16px; --r2:24px; --r3:32px;
+  --nav-h:72px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{display:none}
+html,body{height:100%;overflow-x:hidden;overscroll-behavior:none}
+body{
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(212,168,67,.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(34,211,176,.06) 0%, transparent 40%);
+  color:var(--text);
+  font-family:'IBM Plex Sans Arabic',sans-serif;
+}
+/* Desktop App View Simulation */
+@media (min-width: 768px) {
+  body { display: flex; align-items: center; justify-content: center; background: #02040a; }
+  body::before { content:''; position:fixed; inset:0; background: url('https://www.transparenttextures.com/patterns/cubes.png'); opacity: 0.05; z-index: -1; }
+  .app-container {
+    width: 420px; height: 90vh; max-height: 850px;
+    background: var(--bg); position: relative;
+    border-radius: 40px; border: 8px solid #141b2d;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 40px rgba(212,168,67,0.15);
+    overflow: hidden;
+  }
+  .wrap { height: 100%; overflow-y: auto; padding-bottom: calc(var(--nav-h) + 20px) !important; }
+  #nav { position: absolute !important; bottom: 0 !important; width: 100% !important; border-radius: 0 0 32px 32px !important; }
+  #welcome { position: absolute !important; border-radius: 32px; }
+  .sheet { position: absolute !important; }
+  #toast { position: absolute !important; top: 20px !important; }
+}
+
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image: linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px), linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+  background-size:30px 30px;
+}
+
+.app-container { width: 100%; min-height: 100dvh; position: relative; }
+.wrap{max-width:480px;margin:0 auto;padding:0 18px;position:relative;z-index:1; padding-bottom:calc(env(safe-area-inset-bottom,12px) + var(--nav-h) + 15px); padding-top:env(safe-area-inset-top,0px);}
+
+/* ════════════════════════════════════════
+   ANIMATIONS
+════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{transform:translateX(-100%) skewX(-15deg)}100%{transform:translateX(300%) skewX(-15deg)}}
+@keyframes pop{0%{transform:scale(.82);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes pulseGlow{0%{box-shadow:0 0 0 0 rgba(212,168,67,.4)}70%{box-shadow:0 0 0 15px transparent}100%{box-shadow:0 0 0 0 transparent}}
+
+.fade-up{animation:fadeUp .5s cubic-bezier(.16,1,.3,1) both}
+.s1{animation-delay:.05s}.s2{animation-delay:.1s}.s3{animation-delay:.15s}.s4{animation-delay:.2s}
+
+/* ════════════════════════════════════════
+   WELCOME SCREEN
+════════════════════════════════════════ */
+#welcome{
+  position:fixed;inset:0;z-index:10000; background:var(--bg); display:flex;align-items:center;justify-content:center; padding:24px;
+}
+#welcome.hidden{display:none}
+.welcome-box{ width:100%;max-width:380px; animation:pop .6s cubic-bezier(.16,1,.3,1); text-align:center; }
+.w-logo{
+  width:85px;height:85px;border-radius:28px; background:linear-gradient(135deg,rgba(212,168,67,.2),rgba(212,168,67,.05));
+  border:1px solid var(--border); display:flex;align-items:center;justify-content:center; font-size:2.2rem;color:var(--gold);
+  margin:0 auto 20px; box-shadow:var(--gold-glow); position:relative;
+}
+.w-badge{ display:inline-block;padding:4px 12px;border-radius:8px; background:linear-gradient(90deg,var(--gold),var(--gold-l)); color:#060B1A;font-size:.7rem;font-weight:800;letter-spacing:.06em; margin-bottom:12px; }
+.w-title{font-size:2.2rem;font-weight:800;margin-bottom:8px;letter-spacing:-.02em; background:linear-gradient(90deg,#fff,var(--gold-l)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.w-sub{font-size:.95rem;color:var(--muted);line-height:1.6;margin-bottom:25px}
+.w-opt{
+  width:100%;padding:18px 20px;border-radius:var(--r2); border:1px solid var(--border2);background:rgba(255,255,255,.03);
+  color:var(--text);font-family:inherit;cursor:pointer; display:flex;align-items:center;gap:16px;text-align:right; transition:all .3s;margin-bottom:12px;
+}
+.w-opt:hover,.w-opt:active{background:rgba(212,168,67,.08);border-color:var(--border); transform:translateY(-2px);}
+.w-opt.primary{ background:linear-gradient(135deg,rgba(212,168,67,.12),rgba(212,168,67,.04)); border-color:rgba(212,168,67,.4); }
+.w-opt .w-icon{ width:46px;height:46px;border-radius:14px;flex-shrink:0; display:flex;align-items:center;justify-content:center;font-size:1.1rem; }
+.w-opt.primary .w-icon{background:rgba(212,168,67,.2);color:var(--gold)}
+.w-opt-title{font-size:.95rem;font-weight:700;margin-bottom:4px}
+.w-opt-desc{font-size:.75rem;color:var(--muted)}
+.w-skip{ background:none;border:none;font-family:inherit; font-size:.85rem;color:var(--muted);cursor:pointer; padding:16px;width:100%;transition:color .2s; text-decoration: underline; text-decoration-color: rgba(255,255,255,0.1); text-underline-offset: 4px;}
+
+/* ════════════════════════════════════════
+   HEADER & SYNC BAR
+════════════════════════════════════════ */
+.header{display:flex;justify-content:space-between;align-items:center;padding:24px 0 15px}
+.logo-icon{ width:48px;height:48px;border-radius:16px; background:linear-gradient(135deg,rgba(212,168,67,.2),transparent); border:1px solid var(--border); display:flex;align-items:center;justify-content:center; font-size:1.2rem;color:var(--gold); }
+.logo-name{font-size:1.1rem;font-weight:800;}
+.greet{font-size:.75rem;color:var(--muted);margin-top:2px}
+.icon-btn{ width:44px;height:44px;border-radius:14px; border:1px solid var(--border2);background:rgba(255,255,255,.04); color:var(--text);cursor:pointer;font-size:1rem; display:flex;align-items:center;justify-content:center;transition:all .2s; }
+.icon-btn:hover{background:var(--gold-dim);color:var(--gold); border-color:var(--border);}
+
+/* ════════════════════════════════════════
+   VIEWS & CARDS
+════════════════════════════════════════ */
+.view{display:none} .view.active{display:block;animation:fadeUp .4s cubic-bezier(.16,1,.3,1)}
+
+.bal-card{
+  border-radius:var(--r3);padding:28px 24px;margin-bottom:20px;
+  background:linear-gradient(140deg,#1B2E50 0%,#0D1935 55%,#0A1428 100%);
+  border:1px solid rgba(212,168,67,.25);
+  box-shadow:0 25px 50px -12px rgba(0,0,0,.8),0 0 20px rgba(212,168,67,.1) inset;
+  position:relative;overflow:hidden;
+}
+.bal-card::before{content:'';position:absolute;top:-50%;right:-30%;width:70%;height:200%;background:radial-gradient(circle,rgba(212,168,67,.15) 0%,transparent 70%);pointer-events:none;}
+.bal-shimmer{position:absolute;top:0;left:-100%;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:shimmer 3s infinite cubic-bezier(.4,0,.2,1);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.bal-lbl{font-size:.75rem;color:rgba(212,168,67,.8);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px; font-weight: 600;}
+.bal-amt{font-family:'Space Mono',monospace;font-size:2.8rem;font-weight:700;color:#fff;letter-spacing:-.04em;line-height:1; text-shadow: 0 4px 10px rgba(0,0,0,0.5);}
+.bal-cur{font-size:1rem;font-weight:400;opacity:.7;margin-right:8px}
+.card-chip{width:44px;height:32px;border-radius:6px;background:linear-gradient(135deg,#E8C678,#B8892A);box-shadow:0 4px 15px rgba(212,168,67,.3); position:relative;}
+
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.qa-btn{
+  border-radius:var(--r2);padding:18px 12px; display:flex;flex-direction:column;align-items:center;gap:10px;
+  cursor:pointer;transition:all .3s;border:1px solid var(--border2); background:rgba(255,255,255,.02); backdrop-filter: blur(10px);
+}
+.qa-btn:hover{background:rgba(255,255,255,.05); transform:translateY(-2px);}
+.qa-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.qa-btn.inc .qa-icon{background:var(--teal-dim);color:var(--teal); box-shadow: 0 5px 15px rgba(34,211,176,0.15);}
+.qa-btn.exp .qa-icon{background:var(--rose-dim);color:var(--rose); box-shadow: 0 5px 15px rgba(255,107,138,0.15);}
+
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.sec-title{font-size:1.05rem;font-weight:700}
+.sec-sub{font-size:.75rem;color:var(--muted);margin-top:3px}
+
+.tx-item{
+  display:flex;justify-content:space-between;align-items:center; padding:14px 16px;border-radius:20px;margin-bottom:10px;
+  background:rgba(255,255,255,.02);border:1px solid var(--border2); transition:transform .2s, background .2s;
+}
+.tx-item:hover{background:rgba(255,255,255,.04); transform:scale(1.01);}
+.tx-amt{font-family:'Space Mono',monospace;font-size:.95rem;font-weight:700; direction:ltr}
+
+/* ════════════════════════════════════════
+   BOTTOM NAV & FAB
+════════════════════════════════════════ */
+#nav{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom,10px) + 10px); left:50%;transform:translateX(-50%);
+  width:calc(100% - 32px);max-width:440px;height:var(--nav-h); display:flex;justify-content:space-between;align-items:center;
+  padding:6px 12px;z-index:500;border-radius:28px;
+  background:rgba(10,16,33,.85); border:1px solid rgba(255,255,255,.1);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px); box-shadow:0 20px 40px rgba(0,0,0,.8);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px; padding:8px 12px;border-radius:18px;cursor:pointer;
+  transition:all .3s;color:var(--muted);background:none;border:none; font-family:inherit;min-width:55px;
+}
+.nav-btn.active{background:var(--gold-dim);color:var(--gold); box-shadow: 0 4px 15px rgba(212,168,67,0.1);}
+.nav-btn i{font-size:1.15rem} .nav-btn span{font-size:.65rem;font-weight:700}
+
+.fab-wrap{position:relative}
+.fab{
+  width:58px;height:58px;border-radius:20px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold),#B8882A); color:#060B1A;font-size:1.4rem;
+  display:flex;align-items:center;justify-content:center; box-shadow:var(--gold-glow);
+  transition:all .3s;position:relative;z-index:2;margin-top:-20px; animation: pulseGlow 2s infinite;
+}
+.fab.open { animation:none; transform:rotate(45deg); background:var(--rose); box-shadow:0 0 20px rgba(255,107,138,.4); color:#fff; }
+.fab-menu{ position:absolute;bottom:calc(100% + 15px);left:50%; transform:translateX(-50%) scale(.8) translateY(20px); display:flex;flex-direction:column;gap:10px;align-items:center; pointer-events:none;opacity:0; transition:all .4s cubic-bezier(.16,1,.3,1);z-index:1; }
+.fab-menu.open{pointer-events:auto;opacity:1;transform:translateX(-50%) scale(1) translateY(0)}
+.fab-item{ padding:12px 20px;border-radius:16px;border:none; font-size:.85rem;font-weight:700;cursor:pointer; display:flex;align-items:center;gap:10px;font-family:inherit; background:rgba(10,16,33,.95);border:1px solid var(--border2); box-shadow:0 10px 25px rgba(0,0,0,.6); backdrop-filter: blur(10px); }
+
+/* ════════════════════════════════════════
+   SHEETS & FORMS
+════════════════════════════════════════ */
+.sheet{
+  position:fixed;bottom:0;left:0;right:0;margin:0 auto; max-width:480px;z-index:900;
+  background:rgba(10,16,33,.98); border-top:1px solid var(--border); border-radius:36px 36px 0 0;
+  padding:0 24px calc(env(safe-area-inset-bottom,20px) + 30px); max-height:92dvh;overflow-y:auto;
+  transform:translateY(100%); transition:transform .5s cubic-bezier(.32,1.05,.36,1); box-shadow:0 -20px 60px rgba(0,0,0,.8);
+  backdrop-filter: blur(20px);
+}
+.sheet.show{transform:translateY(0)}
+.sh-handle{width:40px;height:5px;border-radius:5px;background:rgba(255,255,255,.15);margin:16px auto 0}
+.close-btn{ width:34px;height:34px;border-radius:12px;border:none; background:rgba(255,255,255,.05);color:var(--text);cursor:pointer; }
+.btn-gold{background:linear-gradient(135deg,var(--gold),#B8882A);color:#060B1A;box-shadow:var(--gold-glow); font-size: 1rem; padding: 18px; border-radius: 20px;}
+
+.fi,.fsel, .amt-input { background:rgba(0,0,0,.2); border:1px solid rgba(255,255,255,.08); color:#fff; }
+.fi:focus,.fsel:focus, .amt-input:focus { border-color:var(--gold); box-shadow: 0 0 0 4px rgba(212,168,67,0.1); background:rgba(212,168,67,0.02);}
+
+/* Utilities */
+.share-btn { padding: 8px 16px; border-radius: 12px; background: rgba(34,211,176,0.1); color: var(--teal); border: 1px solid rgba(34,211,176,0.2); font-family: inherit; font-size: 0.8rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;}
+.install-card { background: linear-gradient(135deg, rgba(129,140,248,0.15), rgba(129,140,248,0.05)); border: 1px solid var(--violet); border-radius: 20px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+<!-- ════════════════════════════════════════
+     WELCOME SCREEN
+════════════════════════════════════════ -->
+<div id="welcome" class="hidden">
+  <div class="welcome-box">
+    <div class="w-logo"><i class="fa-solid fa-wallet"></i></div>
+    <div class="w-badge"><i class="fa-solid fa-crown" style="margin-left:4px"></i>PRO</div>
+    <h1 class="w-title">محفظتي</h1>
+    <p class="w-sub">تحكم بأموالك بذكاء، أمان،<br>وبطريقة احترافية بالكامل.</p>
+
+    <button class="w-opt primary" onclick="useLocalOnly()">
+      <div class="w-icon"><i class="fa-solid fa-bolt"></i></div>
+      <div>
+        <div class="w-opt-title">البدء فوراً</div>
+        <div class="w-opt-desc">حفظ محلي آمن على جهازك</div>
+      </div>
+    </button>
+    <button class="w-opt" onclick="openExistingFile()">
+      <div class="w-icon" style="background:rgba(34,211,176,.15);color:var(--teal)"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+      <div>
+        <div class="w-opt-title">استعادة نسخة</div>
+        <div class="w-opt-desc">من ملف JSON تم حفظه مسبقاً</div>
+      </div>
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     TOAST
+════════════════════════════════════════ -->
+<div id="toast" style="position:fixed;top:env(safe-area-inset-top,20px);left:50%;transform:translateX(-50%);z-index:9999; display:flex;align-items:center;gap:10px;padding:12px 20px;border-radius:50px;font-size:.85rem;font-weight:700; opacity:0;pointer-events:none;background:rgba(10,16,33,.95);border:1px solid rgba(255,255,255,.1);box-shadow:0 15px 30px rgba(0,0,0,.8); backdrop-filter: blur(10px);">
+  <div id="toastIco"></div><span id="toastMsg"></span>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN APP WRAPPER
+════════════════════════════════════════ -->
+<div class="wrap">
+
+  <header class="header fade-up">
+    <div style="display:flex;align-items:center;gap:14px">
+      <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
+      <div>
+        <div class="logo-name">محفظتي <span style="color:var(--gold)">PRO</span></div>
+        <div class="greet" id="greetTxt">مرحباً بك</div>
+      </div>
+    </div>
+    <button class="icon-btn" onclick="openSheet('settings')"><i class="fa-solid fa-gear"></i></button>
+  </header>
+
+  <!-- ── HOME ── -->
+  <div id="view-home" class="view active">
+    <div class="bal-card fade-up s1" id="balCard">
+      <div class="bal-shimmer"></div>
+      <div class="card-top">
+        <div>
+          <div class="bal-lbl">الرصيد الإجمالي</div>
+          <div class="bal-amt"><span class="bal-cur" id="curBal">ج.م</span><span id="totalBal">0.00</span></div>
+        </div>
+        <div class="card-chip"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;padding-top:20px;border-top:1px solid rgba(255,255,255,.05)">
+        <div>
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px"><i class="fa-solid fa-arrow-down" style="color:var(--teal)"></i> دخل الشهر</div>
+          <div style="font-family:'Space Mono';font-weight:700;color:var(--teal);font-size:1rem" id="homeInc">0.00</div>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:.7rem;color:var(--muted);margin-bottom:6px"><i class="fa-solid fa-arrow-up" style="color:var(--rose)"></i> مصروف الشهر</div>
+          <div style="font-family:'Space Mono';font-weight:700;color:var(--rose);font-size:1rem" id="homeExp">0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qa-grid fade-up s2">
+      <button class="qa-btn inc" onclick="openTx('income')">
+        <div class="qa-icon"><i class="fa-solid fa-plus"></i></div><span>إضافة دخل</span>
+      </button>
+      <button class="qa-btn exp" onclick="openTx('expense')">
+        <div class="qa-icon"><i class="fa-solid fa-minus"></i></div><span>تسجيل مصروف</span>
+      </button>
+    </div>
+
+    <div class="fade-up s3">
+      <div class="sec-hdr">
+        <div><div class="sec-title">آخر العمليات</div></div>
+        <button style="background:none;border:none;color:var(--gold);font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer" onclick="switchView('txs')">الكل <i class="fa-solid fa-angle-left"></i></button>
+      </div>
+      <div id="recentList"></div>
+    </div>
+  </div>
+
+  <!-- ── TRANSACTIONS ── -->
+  <div id="view-txs" class="view">
+    <div class="sec-hdr"><div><div class="sec-title">سجل المعاملات</div></div></div>
+    <div style="display:flex;gap:10px;margin-bottom:15px">
+      <input type="month" id="monthPicker" class="fsel" style="padding:12px;border-radius:16px;" onchange="changeMonth(this.value)">
+      <button class="icon-btn" onclick="document.getElementById('searchInp').focus()"><i class="fa-solid fa-search"></i></button>
+    </div>
+    <div style="position:relative;margin-bottom:15px">
+      <input class="fsel" style="padding-right:40px;border-radius:16px" placeholder="بحث بالوصف..." id="searchInp" oninput="renderTxs()">
+      <i class="fa-solid fa-search" style="position:absolute;right:15px;top:50%;transform:translateY(-50%);color:var(--muted)"></i>
+    </div>
+    <div id="txList"></div>
+  </div>
+
+  <!-- ── WALLETS ── -->
+  <div id="view-wallets" class="view">
+    <div class="sec-hdr">
+      <div><div class="sec-title">المحافظ والحسابات</div></div>
+      <button class="icon-btn" style="color:var(--gold)" onclick="openSheet('wallet')"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    <div id="walletsList"></div>
+    <button onclick="openTransfer()" style="width:100%;padding:16px;border-radius:20px;border:1px dashed rgba(255,255,255,.2);background:rgba(255,255,255,.02);color:var(--text);font-family:inherit;font-weight:700;cursor:pointer;margin-top:10px"><i class="fa-solid fa-arrow-right-arrow-left"></i> تحويل بين المحافظ</button>
+  </div>
+
+  <!-- ── ANALYTICS ── -->
+  <div id="view-analytics" class="view">
+    <div class="sec-hdr">
+      <div><div class="sec-title">التحليلات والتقارير</div></div>
+      <button class="share-btn" onclick="shareReport()"><i class="fa-solid fa-share-nodes"></i> مشاركة</button>
+    </div>
+    <input type="month" id="aMonthPicker" class="fsel" style="padding:12px;border-radius:16px;margin-bottom:15px" onchange="changeAnalyticsMonth(this.value)">
+    
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div style="background:rgba(255,255,255,.03);padding:16px;border-radius:20px;border:1px solid var(--border2)">
+        <div style="font-size:.7rem;color:var(--muted)">صافي التوفير</div>
+        <div style="font-family:'Space Mono';font-size:1.3rem;font-weight:700" id="aNet">0.00</div>
+      </div>
+      <div style="background:rgba(255,255,255,.03);padding:16px;border-radius:20px;border:1px solid var(--border2)">
+        <div style="font-size:.7rem;color:var(--muted)">معدل الادخار</div>
+        <div style="font-family:'Space Mono';font-size:1.3rem;font-weight:700;color:var(--gold)" id="aSavePct">0%</div>
+      </div>
+    </div>
+
+    <div style="background:rgba(255,255,255,.02);border:1px solid var(--border2);border-radius:24px;padding:20px;margin-bottom:20px">
+      <div style="font-weight:700;margin-bottom:15px;font-size:.9rem"><i class="fa-solid fa-chart-pie" style="color:var(--gold)"></i> قاعدة 50/30/20</div>
+      <div style="position:relative;height:180px;display:flex;justify-content:center;margin-bottom:20px">
+        <canvas id="donutChart"></canvas>
+      </div>
+      <div id="ruleBars"></div>
+    </div>
+  </div>
+
+</div><!-- .wrap -->
+
+<!-- ════════════════════════════════════════
+     BOTTOM NAV
+════════════════════════════════════════ -->
+<nav id="nav">
+  <button class="nav-btn active" data-v="home" onclick="switchView('home')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+  <button class="nav-btn" data-v="txs" onclick="switchView('txs')"><i class="fa-solid fa-list-ul"></i><span>السجل</span></button>
+  <div class="fab-wrap">
+    <div class="fab-menu" id="fabMenu">
+      <button class="fab-item exp" onclick="closeFab();openTx('expense')" style="color:var(--rose)"><i class="fa-solid fa-arrow-up"></i>مصروف</button>
+      <button class="fab-item inc" onclick="closeFab();openTx('income')" style="color:var(--teal)"><i class="fa-solid fa-arrow-down"></i>دخل</button>
+    </div>
+    <button class="fab" id="fabBtn" onclick="toggleFab()"><i class="fa-solid fa-plus"></i></button>
+  </div>
+  <button class="nav-btn" data-v="wallets" onclick="switchView('wallets')"><i class="fa-solid fa-vault"></i><span>المحافظ</span></button>
+  <button class="nav-btn" data-v="analytics" onclick="switchView('analytics')"><i class="fa-solid fa-chart-simple"></i><span>تحليل</span></button>
+</nav>
+
+<div id="overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(5px);z-index:800;opacity:0;pointer-events:none;transition:opacity .3s" onclick="closeAllSheets()"></div>
+
+<!-- ════════════════════════════════════════
+     SHEETS
+════════════════════════════════════════ -->
+
+<!-- Transaction Sheet -->
+<div class="sheet" id="sheet-tx">
+  <div class="sh-handle"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:20px 0"><div style="font-weight:700;font-size:1.1rem" id="txTitle">معاملة</div><button class="close-btn" onclick="closeSheet('tx')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div style="margin-bottom:20px"><input class="amt-input" style="width:100%;padding:20px;border-radius:24px;font-family:'Space Mono';font-size:2rem;font-weight:700;text-align:center" type="number" id="txAmt" placeholder="0.00" inputmode="decimal"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:15px">
+    <div><label style="font-size:.75rem;color:var(--muted);margin-bottom:8px;display:block">المحفظة</label><select class="fsel" style="width:100%;padding:14px;border-radius:16px" id="txWallet"></select></div>
+    <div><label style="font-size:.75rem;color:var(--muted);margin-bottom:8px;display:block">التاريخ</label><input class="fi" type="date" style="width:100%;padding:14px;border-radius:16px" id="txDate"></div>
+  </div>
+  <div style="margin-bottom:20px">
+    <label style="font-size:.75rem;color:var(--muted);margin-bottom:8px;display:block">البيان / التصنيف</label>
+    <input class="fi" type="text" style="width:100%;padding:14px;border-radius:16px" id="txCat" placeholder="راتب، بنزين، قهوة..." maxlength="40">
+  </div>
+  <div id="ruleGroup" style="margin-bottom:24px;display:none">
+    <label style="font-size:.75rem;color:var(--muted);margin-bottom:8px;display:block">تصنيف 50/30/20</label>
+    <div style="display:flex;gap:8px">
+      <button class="fsel" style="flex:1;padding:12px;border-radius:14px;cursor:pointer" id="rNeeds" onclick="setRule('needs')">أساسيات</button>
+      <button class="fsel" style="flex:1;padding:12px;border-radius:14px;cursor:pointer" id="rWants" onclick="setRule('wants')">رغبات</button>
+      <button class="fsel" style="flex:1;padding:12px;border-radius:14px;cursor:pointer" id="rSavings" onclick="setRule('savings')">ادخار</button>
+    </div>
+  </div>
+  <button class="btn btn-gold" style="width:100%;cursor:pointer" onclick="saveTx()">تأكيد الحفظ</button>
+</div>
+
+<!-- Wallet/Transfer/Settings (simplified for brevity, fully functional) -->
+<div class="sheet" id="sheet-wallet">
+  <div class="sh-handle"></div><div style="display:flex;justify-content:space-between;align-items:center;padding:20px 0"><div style="font-weight:700;font-size:1.1rem">محفظة جديدة</div><button class="close-btn" onclick="closeSheet('wallet')"><i class="fa-solid fa-xmark"></i></button></div>
+  <input class="fi" type="text" id="wName" placeholder="اسم المحفظة (كاش، بنك...)" style="width:100%;padding:16px;border-radius:16px;margin-bottom:15px">
+  <input class="amt-input" type="number" id="wBal" placeholder="الرصيد الافتتاحي" style="width:100%;padding:16px;border-radius:16px;text-align:center;font-size:1.2rem;margin-bottom:20px">
+  <button class="btn btn-gold" style="width:100%;cursor:pointer" onclick="saveWallet()">إضافة</button>
+</div>
+
+<div class="sheet" id="sheet-transfer">
+  <div class="sh-handle"></div><div style="display:flex;justify-content:space-between;align-items:center;padding:20px 0"><div style="font-weight:700;font-size:1.1rem">تحويل</div><button class="close-btn" onclick="closeSheet('transfer')"><i class="fa-solid fa-xmark"></i></button></div>
+  <select class="fsel" id="tFrom" style="width:100%;padding:16px;border-radius:16px;margin-bottom:10px"></select>
+  <div style="text-align:center;color:var(--muted);margin-bottom:10px"><i class="fa-solid fa-arrow-down"></i></div>
+  <select class="fsel" id="tTo" style="width:100%;padding:16px;border-radius:16px;margin-bottom:15px"></select>
+  <input class="amt-input" type="number" id="tAmt" placeholder="المبلغ" style="width:100%;padding:16px;border-radius:16px;text-align:center;font-size:1.2rem;margin-bottom:20px">
+  <button class="btn btn-gold" style="width:100%;cursor:pointer" onclick="doTransfer()">تأكيد التحويل</button>
+</div>
+
+<div class="sheet" id="sheet-settings">
+  <div class="sh-handle"></div><div style="display:flex;justify-content:space-between;align-items:center;padding:20px 0"><div style="font-weight:700;font-size:1.1rem">الإعدادات</div><button class="close-btn" onclick="closeSheet('settings')"><i class="fa-solid fa-xmark"></i></button></div>
+  
+  <div class="install-card" id="installPrompt" style="display:none">
+    <div><div style="font-weight:700;color:var(--violet)">تثبيت التطبيق</div><div style="font-size:.75rem;color:var(--muted)">للوصول السريع والعمل أوفلاين</div></div>
+    <button class="btn-gold" style="padding:10px 20px;font-size:.85rem;border-radius:12px;border:none;cursor:pointer" onclick="installPWA()">تثبيت</button>
+  </div>
+
+  <div style="margin-bottom:20px">
+    <label style="font-size:.75rem;color:var(--muted);display:block;margin-bottom:8px">العملة</label>
+    <input class="fi" type="text" id="setCur" style="width:100%;padding:16px;border-radius:16px;text-align:center;font-weight:700;font-size:1.2rem">
+  </div>
+  
+  <div style="display:grid;gap:10px;margin-bottom:20px">
+    <button class="fsel" style="padding:16px;border-radius:16px;text-align:right;cursor:pointer;display:flex;justify-content:space-between" onclick="exportJSON()"><span><i class="fa-solid fa-download" style="color:var(--teal)"></i> نسخة احتياطية (JSON)</span></button>
+    <label class="fsel" style="padding:16px;border-radius:16px;text-align:right;cursor:pointer;display:flex;justify-content:space-between"><span><i class="fa-solid fa-upload" style="color:var(--gold)"></i> استعادة البيانات</span><input type="file" accept=".json" style="display:none" onchange="importJSON(event)"></label>
+  </div>
+  
+  <button class="fsel" style="width:100%;padding:16px;border-radius:16px;color:var(--rose);border-color:rgba(255,107,138,.3);cursor:pointer;margin-bottom:20px" onclick="clearAll()"><i class="fa-solid fa-trash"></i> مسح جميع البيانات</button>
+  <button class="btn btn-gold" style="width:100%;cursor:pointer" onclick="saveSettings()">حفظ وإغلاق</button>
+</div>
+
+</div><!-- .app-container -->
+
+<script>
+/* ══════════════════════════════════════
+   PWA DYNAMIC SETUP (INSTALLATION)
+══════════════════════════════════════ */
+const manifest = {
+  name: "محفظتي PRO", short_name: "محفظتي", start_url: ".", display: "standalone",
+  background_color: "#060B1A", theme_color: "#060B1A",
+  icons: [{src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='120' fill='%23060B1A'/%3E%3Cpath d='M384 192h-48v-48c0-26.5-21.5-48-48-48H128C101.5 96 80 117.5 80 144v224c0 26.5 21.5 48 48 48h256c26.5 0 48-21.5 48-48V240c0-26.5-21.5-48-48-48zm-16 144c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32z' fill='%23D4A843'/%3E%3C/svg%3E", sizes: "512x512", type: "image/svg+xml"}]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+document.head.insertAdjacentHTML('beforeend', `<link rel="manifest" href="${URL.createObjectURL(blob)}">`);
+
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById('installPrompt').style.display = 'flex';
+});
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { deferredPrompt = null; document.getElementById('installPrompt').style.display = 'none'; });
+  }
+}
+
+/* ══════════════════════════════════════
+   STATE & CORE
+══════════════════════════════════════ */
+let app = { settings: { currency: 'ج.م' }, wallets: [{ id: 1, name: 'المحفظة الرئيسية', balance: 0 }], txs: [] };
+let currentTxType = 'income', currentRule = 'needs';
+let donutChartInst = null;
+const today = () => new Date().toISOString().split('T')[0];
+const curMonth = () => new Date().toISOString().slice(0,7);
+const fmt = n => parseFloat(n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+const vib = () => { try{navigator.vibrate&&navigator.vibrate(30)}catch{} };
+
+function saveLocal() { localStorage.setItem('mahfazati_v4', JSON.stringify(app)); }
+function loadLocal() {
+  const s = localStorage.getItem('mahfazati_v4');
+  if(s) { app = JSON.parse(s); if(!app.wallets.length) app.wallets=[{id:1,name:'رئيسية',balance:0}]; }
+  else { document.getElementById('welcome').classList.remove('hidden'); }
+}
+
+/* ══════════════════════════════════════
+   UI LOGIC
+══════════════════════════════════════ */
+function toast(msg, err=false) {
+  vib(); const t=document.getElementById('toast');
+  t.style.animation = 'none'; t.offsetHeight;
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIco').innerHTML = err ? '<i class="fa-solid fa-xmark" style="color:var(--rose)"></i>' : '<i class="fa-solid fa-check" style="color:var(--teal)"></i>';
+  t.style.opacity='1'; t.style.animation = 'fadeUp .3s forwards';
+  setTimeout(()=> {t.style.opacity='0'}, 3000);
+}
+
+function switchView(v) {
+  vib(); document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(e=>e.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelector(`[data-v="${v}"]`).classList.add('active');
+  closeFab();
+  if(v==='home') renderHome(); if(v==='txs') renderTxs();
+  if(v==='wallets') renderWallets(); if(v==='analytics') renderAnalytics();
+}
+
+function openSheet(id) { vib(); closeFab(); document.getElementById('overlay').style.opacity='1'; document.getElementById('overlay').style.pointerEvents='auto'; document.getElementById('sheet-'+id).classList.add('show'); }
+function closeSheet(id) { document.getElementById('sheet-'+id).classList.remove('show'); setTimeout(closeAllSheets, 300); }
+function closeAllSheets() { document.querySelectorAll('.sheet').forEach(s=>s.classList.remove('show')); document.getElementById('overlay').style.opacity='0'; document.getElementById('overlay').style.pointerEvents='none'; }
+function toggleFab() { vib(); document.getElementById('fabMenu').classList.toggle('open'); document.getElementById('fabBtn').classList.toggle('open'); }
+function closeFab() { document.getElementById('fabMenu').classList.remove('open'); document.getElementById('fabBtn').classList.remove('open'); }
+
+/* ══════════════════════════════════════
+   TRANSACTIONS
+══════════════════════════════════════ */
+function openTx(type) {
+  currentTxType = type;
+  document.getElementById('txTitle').textContent = type==='income'?'إضافة دخل':'تسجيل مصروف';
+  document.getElementById('txAmt').value = ''; document.getElementById('txCat').value = '';
+  document.getElementById('txDate').value = today();
+  document.getElementById('txWallet').innerHTML = app.wallets.map(w=>`<option value="${w.id}">${w.name}</option>`).join('');
+  document.getElementById('ruleGroup').style.display = type==='expense'?'block':'none';
+  setRule('needs'); openSheet('tx');
+}
+function setRule(r) { currentRule = r; ['Needs','Wants','Savings'].forEach(x=>document.getElementById('r'+x).style.background='rgba(255,255,255,.05)'); document.getElementById('r'+r.charAt(0).toUpperCase()+r.slice(1)).style.background='var(--gold-dim)'; document.getElementById('r'+r.charAt(0).toUpperCase()+r.slice(1)).style.color='var(--gold)'; }
+
+function saveTx() {
+  const amt = parseFloat(document.getElementById('txAmt').value), cat = document.getElementById('txCat').value.trim(), wid = parseInt(document.getElementById('txWallet').value), date = document.getElementById('txDate').value;
+  if(!amt || amt<=0) return toast('ادخل مبلغ صحيح',true); if(!cat) return toast('ادخل البيان',true);
+  const w = app.wallets.find(x=>x.id===wid); if(!w) return;
+  app.txs.push({id:Date.now(), type:currentTxType, amount:amt, cat, wId:wid, date, rule:currentTxType==='expense'?currentRule:null});
+  currentTxType==='income' ? w.balance+=amt : w.balance-=amt;
+  saveLocal(); closeSheet('tx'); renderHome(); toast('تم التسجيل بنجاح');
+}
+function delTx(id) {
+  if(!confirm('تأكيد الحذف؟')) return;
+  const i = app.txs.findIndex(t=>t.id===id); if(i<0) return;
+  const t = app.txs[i], w = app.wallets.find(x=>x.id===t.wId);
+  if(w) { t.type==='income'?w.balance-=t.amount:w.balance+=t.amount; }
+  app.txs.splice(i,1); saveLocal(); renderHome(); renderTxs(); renderWallets(); toast('تم الحذف');
+}
+
+/* ══════════════════════════════════════
+   RENDERING
+══════════════════════════════════════ */
+function renderHome() {
+  document.getElementById('curBal').textContent = app.settings.currency;
+  document.getElementById('totalBal').textContent = fmt(app.wallets.reduce((a,b)=>a+b.balance,0));
+  let inc=0, exp=0; app.txs.filter(t=>t.date.startsWith(curMonth())).forEach(t=>{ t.type==='income'?inc+=t.amount:exp+=t.amount; });
+  document.getElementById('homeInc').textContent = fmt(inc); document.getElementById('homeExp').textContent = fmt(exp);
+  
+  const rec = [...app.txs].sort((a,b)=>b.id-a.id).slice(0,5);
+  document.getElementById('recentList').innerHTML = rec.length ? rec.map(t=>`
+    <div class="tx-item">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:${t.type==='income'?'var(--teal-dim)':'var(--rose-dim)'};color:${t.type==='income'?'var(--teal)':'var(--rose)'};display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-arrow-${t.type==='income'?'down':'up'}"></i></div>
+        <div><div style="font-weight:700;font-size:.9rem">${t.cat}</div><div style="font-size:.7rem;color:var(--muted)">${t.date}</div></div>
+      </div>
+      <div style="text-align:left">
+        <div class="tx-amt" style="color:${t.type==='income'?'var(--teal)':'var(--text)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+        <button onclick="delTx(${t.id})" style="background:none;border:none;color:var(--rose);font-size:.7rem;cursor:pointer;margin-top:4px">حذف</button>
+      </div>
+    </div>`).join('') : '<div style="text-align:center;padding:30px;color:var(--muted)">لا توجد عمليات بعد</div>';
+}
+
+let txMonth = curMonth();
+function changeMonth(v) { txMonth=v||curMonth(); renderTxs(); }
+function renderTxs() {
+  document.getElementById('monthPicker').value = txMonth;
+  const q = document.getElementById('searchInp').value.toLowerCase();
+  const list = app.txs.filter(t=>t.date.startsWith(txMonth) && (!q || t.cat.toLowerCase().includes(q))).sort((a,b)=>b.id-a.id);
+  document.getElementById('txList').innerHTML = list.length ? list.map(t=>`
+    <div class="tx-item">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:12px;background:${t.type==='income'?'var(--teal-dim)':'var(--rose-dim)'};color:${t.type==='income'?'var(--teal)':'var(--rose)'};display:flex;align-items:center;justify-content:center"><i class="fa-solid fa-arrow-${t.type==='income'?'down':'up'}"></i></div>
+        <div><div style="font-weight:700;font-size:.9rem">${t.cat}</div><div style="font-size:.7rem;color:var(--muted)">${t.date} | ${app.wallets.find(w=>w.id===t.wId)?.name||''}</div></div>
+      </div>
+      <div style="text-align:left">
+        <div class="tx-amt" style="color:${t.type==='income'?'var(--teal)':'var(--text)'}">${t.type==='income'?'+':'-'}${fmt(t.amount)}</div>
+        <button onclick="delTx(${t.id})" style="background:none;border:none;color:var(--rose);font-size:.7rem;cursor:pointer;margin-top:4px">حذف</button>
+      </div>
+    </div>`).join('') : '<div style="text-align:center;padding:30px;color:var(--muted)">لا توجد نتائج</div>';
+}
+
+function renderWallets() {
+  document.getElementById('walletsList').innerHTML = app.wallets.map(w=>`
+    <div style="background:rgba(255,255,255,.02);border:1px solid var(--border2);border-radius:24px;padding:20px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700;font-size:1rem;margin-bottom:4px"><i class="fa-solid fa-vault" style="color:var(--gold);margin-left:8px"></i>${w.name}</div>
+        <div style="font-family:'Space Mono';font-size:1.5rem;font-weight:700">${fmt(w.balance)} <span style="font-size:.8rem;color:var(--muted);font-family:'IBM Plex Sans Arabic'">${app.settings.currency}</span></div>
+      </div>
+      ${app.wallets.length>1 ? `<button onclick="delWallet(${w.id})" class="icon-btn" style="color:var(--rose);border-color:rgba(255,107,138,.2)"><i class="fa-solid fa-trash"></i></button>`:''}
+    </div>`).join('');
+  const opts = app.wallets.map(w=>`<option value="${w.id}">${w.name} (${fmt(w.balance)})</option>`).join('');
+  document.getElementById('tFrom').innerHTML = document.getElementById('tTo').innerHTML = opts;
+}
+
+let aMonth = curMonth();
+function changeAnalyticsMonth(v) { aMonth=v||curMonth(); renderAnalytics(); }
+function renderAnalytics() {
+  document.getElementById('aMonthPicker').value = aMonth;
+  let inc=0, n=0, w=0, s=0;
+  app.txs.filter(t=>t.date.startsWith(aMonth)).forEach(t=>{
+    if(t.type==='income') inc+=t.amount;
+    else { t.rule==='wants'?w+=t.amount : t.rule==='savings'?s+=t.amount : n+=t.amount; }
+  });
+  const exp = n+w+s, net = inc-exp;
+  document.getElementById('aNet').textContent = fmt(net); document.getElementById('aNet').style.color = net>=0?'var(--teal)':'var(--rose)';
+  document.getElementById('aSavePct').textContent = inc>0 ? Math.round((net/inc)*100)+'%' : '0%';
+  
+  if(donutChartInst) donutChartInst.destroy();
+  Chart.defaults.color='#5A6A8A'; Chart.defaults.font.family="'IBM Plex Sans Arabic'";
+  donutChartInst = new Chart(document.getElementById('donutChart'), {
+    type:'doughnut', data:{ labels:['أساسيات','رغبات','ادخار'], datasets:[{data:[n||.1,w||.1,s||.1],backgroundColor:['#818CF8','#D946EF','#22D3B0'],borderWidth:0}] },
+    options:{ cutout:'75%', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+  });
+  
+  const b = (v,mx,c,l) => `<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:6px"><span>${l}</span><span style="font-family:'Space Mono'">${fmt(v)} <span style="color:var(--muted)">/ ${fmt(mx)}</span></span></div><div style="height:6px;background:rgba(255,255,255,.05);border-radius:10px;overflow:hidden"><div style="height:100%;background:${v>mx&&inc>0?'var(--rose)':c};width:${inc>0?Math.min(100,(v/mx)*100):0}%"></div></div></div>`;
+  document.getElementById('ruleBars').innerHTML = b(n,inc*.5,'#818CF8','أساسيات 50%') + b(w,inc*.3,'#D946EF','رغبات 30%') + b(s,inc*.2,'#22D3B0','ادخار 20%');
+}
+
+/* ══════════════════════════════════════
+   ACTIONS & SETTINGS
+══════════════════════════════════════ */
+function saveWallet() { const n=document.getElementById('wName').value.trim(), b=parseFloat(document.getElementById('wBal').value)||0; if(!n)return toast('ادخل الاسم',true); app.wallets.push({id:Date.now(),name:n,balance:b}); saveLocal(); closeSheet('wallet'); renderWallets(); renderHome(); }
+function delWallet(id) { if(app.wallets.length<=1)return; if(!confirm('تأكيد حذف المحفظة؟'))return; app.wallets=app.wallets.filter(w=>w.id!==id); saveLocal(); renderWallets(); renderHome(); }
+function doTransfer() {
+  const f=parseInt(document.getElementById('tFrom').value), t=parseInt(document.getElementById('tTo').value), a=parseFloat(document.getElementById('tAmt').value);
+  if(f===t)return toast('اختر محفظتين مختلفتين',true); if(!a||a<=0)return toast('مبلغ غير صحيح',true);
+  const wf=app.wallets.find(x=>x.id===f), wt=app.wallets.find(x=>x.id===t); if(!wf||!wt)return;
+  wf.balance-=a; wt.balance+=a; saveLocal(); closeSheet('transfer'); renderWallets(); renderHome(); toast('تم التحويل');
+}
+function saveSettings() { app.settings.currency = document.getElementById('setCur').value||'ج.م'; saveLocal(); renderHome(); closeSheet('settings'); toast('تم الحفظ'); }
+function clearAll() { if(confirm('هل أنت متأكد من مسح كافة البيانات؟ لا يمكن التراجع!')){ app={settings:{currency:app.settings.currency},wallets:[{id:1,name:'رئيسية',balance:0}],txs:[]}; saveLocal(); closeSheet('settings'); switchView('home'); toast('تم المسح');} }
+
+function exportJSON() {
+  const b = new Blob([JSON.stringify(app)], {type:'application/json'}); const a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = `mahfazati_${today()}.json`; a.click(); toast('تم التحميل');
+}
+function importJSON(e) {
+  const r = new FileReader(); r.onload = ev => { try{ const d=JSON.parse(ev.target.result); if(d.wallets&&d.txs){app=d; saveLocal(); closeSheet('settings'); switchView('home'); toast('تمت الاستعادة');} }catch{toast('ملف غير صالح',true);} };
+  if(e.target.files[0]) r.readAsText(e.target.files[0]);
+}
+
+async function shareReport() {
+  const txt = `📊 تقرير محفظتي (${aMonth}):\nالرصيد الكلي: ${fmt(app.wallets.reduce((a,b)=>a+b.balance,0))} ${app.settings.currency}\nصافي توفير الشهر: ${document.getElementById('aNet').textContent}`;
+  if(navigator.share) { try{ await navigator.share({title:'تقرير مالي', text:txt}); }catch(e){} }
+  else { navigator.clipboard.writeText(txt); toast('تم نسخ التقرير للحافظة'); }
+}
+
+function useLocalOnly() { document.getElementById('welcome').classList.add('hidden'); }
+function openExistingFile() { document.querySelector('input[type="file"]').click(); document.getElementById('welcome').classList.add('hidden'); }
+
+/* INIT */
+window.onload = () => {
+  const h = new Date().getHours(); document.getElementById('greetTxt').textContent = h<12?'صباح الخير ☀️':h<18?'مساء الخير 🌤️':'مساء النور 🌙';
+  loadLocal(); document.getElementById('setCur').value = app.settings.currency; switchView('home');
+};
+</script>
+</body>
+</html>

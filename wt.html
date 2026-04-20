@@ -1,0 +1,2030 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#060B1A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="محفظتي PRO">
+<title>محفظتي PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Space+Mono:ital,wght@0,400;0,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════════
+   TOKENS & RESET
+════════════════════════════════════════ */
+:root{
+  --bg:#060B1A; --bg2:#0D1426;
+  --surface:rgba(13,22,45,.88);
+  --gold:#D4A843; --gold-l:#F0C060; --gold-dim:rgba(212,168,67,.15);
+  --teal:#22D3B0; --teal-dim:rgba(34,211,176,.15);
+  --rose:#FF6B8A; --rose-dim:rgba(255,107,138,.15);
+  --violet:#818CF8; --violet-dim:rgba(129,140,248,.15);
+  --text:#E8EDF8; --muted:#5A6A8A;
+  --border:rgba(212,168,67,.13); --border2:rgba(255,255,255,.07);
+  --r1:16px; --r2:24px; --r3:32px;
+  --nav-h:72px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{display:none}
+html,body{height:100%;overflow-x:hidden;overscroll-behavior:none}
+body{
+  background-color:var(--bg);
+  background-image:
+    radial-gradient(ellipse 90% 55% at 15% -5%, rgba(212,168,67,.1) 0%, transparent 55%),
+    radial-gradient(ellipse 65% 50% at 92% 105%, rgba(34,211,176,.09) 0%, transparent 55%);
+  color:var(--text);
+  font-family:'IBM Plex Sans Arabic',sans-serif;
+  min-height:100dvh;
+  padding-bottom:calc(env(safe-area-inset-bottom,12px) + var(--nav-h) + 8px);
+  padding-top:env(safe-area-inset-top,0px);
+}
+/* subtle grid */
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+/* noise */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.022;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:160px;
+}
+.wrap{max-width:480px;margin:0 auto;padding:0 18px;position:relative;z-index:1}
+
+/* ════════════════════════════════════════
+   ANIMATIONS
+════════════════════════════════════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{transform:translateX(-100%) skewX(-15deg)}100%{transform:translateX(300%) skewX(-15deg)}}
+@keyframes pop{0%{transform:scale(.82);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes toastIn{from{transform:translateX(-50%) translateY(-70px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+@keyframes toastOut{from{transform:translateX(-50%) translateY(0);opacity:1}to{transform:translateX(-50%) translateY(-70px);opacity:0}}
+@keyframes ripple{to{transform:scale(5);opacity:0}}
+@keyframes syncSpin{to{transform:rotate(360deg)}}
+@keyframes syncPulse{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes wPop{from{opacity:0;transform:scale(.93) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.fade-up{animation:fadeUp .4s cubic-bezier(.16,1,.3,1) both}
+.s1{animation-delay:.05s}.s2{animation-delay:.1s}.s3{animation-delay:.15s}.s4{animation-delay:.2s}
+
+/* ════════════════════════════════════════
+   WELCOME SCREEN
+════════════════════════════════════════ */
+#welcome{
+  position:fixed;inset:0;z-index:10000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% 10%, rgba(212,168,67,.14) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 85% 90%, rgba(34,211,176,.12) 0%, transparent 60%);
+}
+#welcome.hidden{display:none}
+.welcome-box{
+  width:100%;max-width:380px;
+  animation:wPop .6s cubic-bezier(.16,1,.3,1);
+  text-align:center;
+}
+.w-logo{
+  width:72px;height:72px;border-radius:24px;
+  background:linear-gradient(135deg,rgba(212,168,67,.2),rgba(212,168,67,.05));
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.8rem;color:var(--gold);
+  margin:0 auto 16px;
+  box-shadow:0 0 40px rgba(212,168,67,.15);
+  position:relative;
+}
+.w-logo::after{
+  content:'';position:absolute;inset:-1px;border-radius:25px;
+  background:linear-gradient(135deg,rgba(212,168,67,.3),transparent,rgba(212,168,67,.15));
+  mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);
+  mask-composite:exclude;-webkit-mask-composite:xor;
+  padding:1px;
+}
+.w-badge{
+  display:inline-block;padding:3px 10px;border-radius:8px;
+  background:linear-gradient(90deg,var(--gold),var(--gold-l));
+  color:#060B1A;font-size:.65rem;font-weight:800;letter-spacing:.06em;
+  margin-bottom:12px;
+}
+.w-title{font-size:2rem;font-weight:800;margin-bottom:8px;letter-spacing:-.02em}
+.w-sub{font-size:.9rem;color:var(--muted);line-height:1.6;margin-bottom:8px}
+.w-file-label{font-size:.82rem;color:var(--muted);margin:20px 0 14px;font-weight:600}
+.w-opt{
+  width:100%;padding:16px 20px;border-radius:var(--r2);
+  border:1px solid var(--border2);background:rgba(255,255,255,.03);
+  color:var(--text);font-family:inherit;cursor:pointer;
+  display:flex;align-items:center;gap:14px;text-align:right;
+  transition:all .2s;margin-bottom:10px;
+}
+.w-opt:hover,.w-opt:active{background:rgba(212,168,67,.06);border-color:var(--border)}
+.w-opt.primary{
+  background:linear-gradient(135deg,rgba(212,168,67,.12),rgba(212,168,67,.04));
+  border-color:rgba(212,168,67,.3);
+}
+.w-opt .w-icon{
+  width:42px;height:42px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+}
+.w-opt.primary .w-icon{background:rgba(212,168,67,.15);color:var(--gold)}
+.w-opt .w-icon.teal{background:rgba(34,211,176,.12);color:var(--teal)}
+.w-opt-text{flex:1}
+.w-opt-title{font-size:.9rem;font-weight:700;margin-bottom:3px}
+.w-opt-desc{font-size:.72rem;color:var(--muted)}
+.w-skip{
+  background:none;border:none;font-family:inherit;
+  font-size:.8rem;color:var(--muted);cursor:pointer;
+  padding:14px;width:100%;transition:color .2s;
+}
+.w-skip:hover{color:var(--text)}
+.w-compat-note{
+  font-size:.74rem;color:var(--muted);
+  background:rgba(255,255,255,.03);border:1px solid var(--border2);
+  border-radius:12px;padding:10px 14px;margin-top:12px;
+  display:flex;gap:8px;align-items:flex-start;text-align:right;line-height:1.5;
+}
+.w-compat-note i{color:var(--gold);flex-shrink:0;margin-top:2px}
+
+/* ════════════════════════════════════════
+   HEADER & SYNC BAR
+════════════════════════════════════════ */
+.header{display:flex;justify-content:space-between;align-items:center;padding:18px 0 10px}
+.hdr-logo{display:flex;align-items:center;gap:12px}
+.logo-icon{
+  width:46px;height:46px;border-radius:15px;
+  background:linear-gradient(135deg,rgba(212,168,67,.15),rgba(212,168,67,.03));
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;color:var(--gold);
+}
+.logo-name{font-size:1.05rem;font-weight:800;letter-spacing:-.01em}
+.pro-tag{
+  display:inline-block;padding:2px 7px;border-radius:7px;
+  background:linear-gradient(90deg,var(--gold),var(--gold-l));
+  color:#060B1A;font-size:.6rem;font-weight:800;letter-spacing:.05em;
+  vertical-align:middle;margin-right:4px;
+}
+.greet{font-size:.73rem;color:var(--muted);margin-top:1px}
+.icon-btn{
+  width:42px;height:42px;border-radius:13px;
+  border:1px solid var(--border2);background:rgba(255,255,255,.04);
+  color:var(--muted);cursor:pointer;font-size:.95rem;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.icon-btn:hover,.icon-btn:active{background:rgba(255,255,255,.08);color:var(--text)}
+
+/* Sync Bar */
+#syncBar{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 12px;border-radius:50px;
+  border:1px solid var(--border2);background:rgba(13,22,45,.6);
+  margin-bottom:16px;overflow:hidden;
+}
+.sync-fname{font-size:.72rem;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sync-status-wrap{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sync-dot.synced{background:var(--teal)}
+.sync-dot.syncing{background:var(--gold);animation:syncPulse .8s infinite}
+.sync-dot.unsaved{background:var(--gold)}
+.sync-dot.error{background:var(--rose)}
+.sync-dot.idle{background:var(--muted)}
+.sync-label{font-size:.68rem}
+.sync-time{font-size:.65rem;color:var(--muted)}
+.sync-mini-btn{
+  width:26px;height:26px;border-radius:8px;border:none;
+  background:rgba(255,255,255,.04);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:.72rem;flex-shrink:0;transition:all .2s;
+}
+.sync-mini-btn:hover{background:rgba(212,168,67,.12);color:var(--gold)}
+.sync-mini-btn.spinning i{animation:syncSpin .7s linear infinite}
+.sync-link-btn{
+  padding:4px 10px;border-radius:8px;border:1px solid var(--border);
+  background:rgba(212,168,67,.08);color:var(--gold);
+  font-size:.68rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;
+  transition:all .2s;
+}
+.sync-link-btn:hover{background:rgba(212,168,67,.15)}
+
+/* ════════════════════════════════════════
+   VIEWS
+════════════════════════════════════════ */
+.view{display:none}
+.view.active{display:block;animation:fadeUp .38s cubic-bezier(.16,1,.3,1)}
+
+/* ════════════════════════════════════════
+   BALANCE CARD
+════════════════════════════════════════ */
+.bal-card{
+  border-radius:var(--r3);padding:26px 22px 22px;margin-bottom:18px;
+  background:linear-gradient(140deg,#1B2E50 0%,#0D1935 55%,#142540 100%);
+  border:1px solid rgba(212,168,67,.22);
+  box-shadow:0 20px 50px -10px rgba(0,0,0,.65),0 0 0 1px rgba(212,168,67,.08);
+  position:relative;overflow:hidden;cursor:default;transition:transform .3s;
+}
+.bal-card::before{
+  content:'';position:absolute;top:-40%;right:-25%;width:60%;height:190%;
+  background:radial-gradient(ellipse,rgba(212,168,67,.1) 0%,transparent 70%);pointer-events:none;
+}
+.bal-shimmer{
+  position:absolute;top:0;left:-80%;width:35%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.065),transparent);
+  animation:shimmer 4s infinite cubic-bezier(.4,0,.2,1);
+}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.bal-lbl{font-size:.7rem;color:rgba(212,168,67,.7);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.bal-amt{
+  font-family:'Space Mono',monospace;font-size:2.5rem;font-weight:700;
+  color:#fff;letter-spacing:-.03em;line-height:1;
+}
+.bal-cur{font-size:.95rem;font-weight:400;opacity:.55;margin-right:5px}
+.card-chip{
+  width:40px;height:30px;border-radius:6px;
+  background:linear-gradient(135deg,#D4A843,#B8892A);
+  position:relative;overflow:hidden;
+  box-shadow:0 3px 10px rgba(212,168,67,.28);
+}
+.card-chip::after{content:'';position:absolute;inset:5px;border-radius:3px;border:1.5px solid rgba(0,0,0,.18);background:linear-gradient(135deg,rgba(255,255,255,.12),transparent)}
+.card-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  padding-top:18px;border-top:1px solid rgba(212,168,67,.12);position:relative;
+}
+.card-stats::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,168,67,.3),transparent)}
+.stat-block{background:rgba(255,255,255,.04);border-radius:14px;padding:11px;border:1px solid rgba(255,255,255,.04)}
+.stat-lbl{font-size:.68rem;color:rgba(255,255,255,.45);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.sdot{width:5px;height:5px;border-radius:50%}
+.stat-val{font-family:'Space Mono',monospace;font-size:.92rem;font-weight:700}
+
+/* ════════════════════════════════════════
+   QUICK ACTIONS
+════════════════════════════════════════ */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:22px}
+.qa-btn{
+  border-radius:var(--r2);padding:15px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  cursor:pointer;transition:all .2s;border:1px solid var(--border2);
+  background:rgba(13,22,45,.7);position:relative;overflow:hidden;
+}
+.qa-btn:active{transform:scale(.97)}
+.qa-icon{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:all .2s}
+.qa-btn.inc .qa-icon{background:var(--teal-dim);color:var(--teal)}
+.qa-btn.exp .qa-icon{background:var(--rose-dim);color:var(--rose)}
+.qa-btn:active.inc .qa-icon{background:var(--teal);color:#060B1A}
+.qa-btn:active.exp .qa-icon{background:var(--rose);color:#fff}
+.qa-btn span{font-size:.77rem;font-weight:600;color:var(--muted)}
+
+/* ════════════════════════════════════════
+   SECTION HEADER
+════════════════════════════════════════ */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.sec-title{font-size:.98rem;font-weight:700}
+.sec-sub{font-size:.69rem;color:var(--muted);margin-top:2px}
+.sec-link{font-size:.74rem;color:var(--gold);font-weight:600;cursor:pointer;background:none;border:none;font-family:inherit}
+.add-btn{
+  width:40px;height:40px;border-radius:12px;
+  border:1px solid var(--border);background:var(--gold-dim);
+  color:var(--gold);font-size:.95rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.add-btn:hover,.add-btn:active{background:var(--gold);color:#060B1A}
+
+/* ════════════════════════════════════════
+   TRANSACTION ITEMS
+════════════════════════════════════════ */
+.tx-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 13px;border-radius:17px;margin-bottom:7px;
+  background:rgba(13,22,45,.7);border:1px solid var(--border2);
+  transition:background .15s;
+}
+.tx-item:active{background:rgba(255,255,255,.04)}
+.tx-left{display:flex;align-items:center;gap:11px}
+.tx-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.85rem;flex-shrink:0}
+.tx-ico.inc{background:var(--teal-dim);color:var(--teal)}
+.tx-ico.exp{background:var(--rose-dim);color:var(--rose)}
+.tx-cat{font-size:.86rem;font-weight:600;color:var(--text)}
+.tx-meta{font-size:.68rem;color:var(--muted);margin-top:2px}
+.tx-amt{font-family:'Space Mono',monospace;font-size:.9rem;font-weight:700;text-align:left;direction:ltr}
+.tx-amt.inc{color:var(--teal)}.tx-amt.exp{color:var(--rose)}
+.tx-del{font-size:.65rem;color:var(--muted);cursor:pointer;background:none;border:none;text-align:left;margin-top:3px;transition:color .15s;display:block}
+.tx-del:hover{color:var(--rose)}
+
+/* ════════════════════════════════════════
+   EMPTY STATE
+════════════════════════════════════════ */
+.empty{text-align:center;padding:38px 20px;border-radius:var(--r2);border:1.5px dashed rgba(255,255,255,.07)}
+.empty-ico{font-size:1.8rem;margin-bottom:10px;opacity:.25}
+.empty-t{font-size:.88rem;font-weight:600;color:var(--muted)}
+.empty-s{font-size:.73rem;color:rgba(90,106,138,.65);margin-top:4px}
+
+/* ════════════════════════════════════════
+   WALLET CARDS
+════════════════════════════════════════ */
+.wallet-card{
+  border-radius:var(--r2);padding:20px 22px;margin-bottom:11px;
+  position:relative;overflow:hidden;
+  box-shadow:0 14px 36px -8px rgba(0,0,0,.5);transition:transform .2s;
+}
+.wallet-card:active{transform:scale(.99)}
+.wallet-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,0,0,.2);border-radius:50px;padding:4px 10px;font-size:.7rem;font-weight:600;margin-bottom:12px}
+.wallet-name{font-size:.95rem;font-weight:700;color:#fff;margin-bottom:3px}
+.wallet-bal{font-family:'Space Mono',monospace;font-size:1.75rem;font-weight:700;color:#fff;letter-spacing:-.02em}
+.wallet-cur{font-size:.8rem;opacity:.55;margin-right:4px}
+.wallet-del{
+  position:absolute;bottom:16px;left:16px;
+  background:rgba(0,0,0,.25);border:none;border-radius:9px;padding:5px 10px;
+  color:rgba(255,255,255,.4);cursor:pointer;font-size:.7rem;
+  transition:all .2s;font-family:inherit;
+}
+.wallet-del:hover{color:var(--rose);background:rgba(255,107,138,.15)}
+.wc-0{background:linear-gradient(135deg,#1A3A6A,#0D2245)}
+.wc-1{background:linear-gradient(135deg,#2E1A50,#1A0D35)}
+.wc-2{background:linear-gradient(135deg,#1A4A3A,#0D2E24)}
+.wc-3{background:linear-gradient(135deg,#4A2818,#2E180D)}
+.wc-4{background:linear-gradient(135deg,#1A3845,#0D222B)}
+.wc-5{background:linear-gradient(135deg,#4A1830,#2E0D1E)}
+
+/* ════════════════════════════════════════
+   DEBTS
+════════════════════════════════════════ */
+.debt-summary{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:18px}
+.ds-card{border-radius:var(--r2);padding:15px}
+.ds-card.lent{background:var(--teal-dim);border:1px solid rgba(34,211,176,.18)}
+.ds-card.borr{background:var(--rose-dim);border:1px solid rgba(255,107,138,.18)}
+.ds-lbl{font-size:.68rem;color:var(--muted);margin-bottom:5px}
+.ds-val{font-family:'Space Mono',monospace;font-size:1.15rem;font-weight:700}
+.ds-val.lent{color:var(--teal)}.ds-val.borr{color:var(--rose)}
+.debt-card{
+  border-radius:var(--r2);padding:18px 20px;margin-bottom:11px;
+  background:rgba(13,22,45,.7);border:1px solid var(--border2);position:relative;
+}
+.debt-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.debt-person{font-size:.98rem;font-weight:700}
+.debt-date{font-size:.68rem;color:var(--muted);margin-top:2px}
+.debt-badge{padding:3px 10px;border-radius:50px;font-size:.68rem;font-weight:700}
+.debt-badge.lent{background:var(--teal-dim);color:var(--teal)}
+.debt-badge.borr{background:var(--rose-dim);color:var(--rose)}
+.debt-track{height:5px;border-radius:50px;background:rgba(255,255,255,.07);margin:10px 0;overflow:hidden}
+.debt-fill{height:100%;border-radius:50px;transition:width 1s cubic-bezier(.16,1,.3,1)}
+.debt-fill.lent{background:linear-gradient(90deg,var(--teal),#0ABFA0)}
+.debt-fill.borr{background:linear-gradient(90deg,var(--rose),#E04F6A)}
+.debt-nums{display:flex;justify-content:space-between;font-size:.73rem;color:var(--muted)}
+.debt-nums span.mono{font-family:'Space Mono',monospace}
+.debt-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.pay-btn{
+  padding:7px 16px;border-radius:11px;border:none;
+  font-size:.76rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;
+}
+.pay-btn.lent{background:var(--teal-dim);color:var(--teal)}
+.pay-btn.borr{background:var(--rose-dim);color:var(--rose)}
+.pay-btn:hover.lent{background:var(--teal);color:#060B1A}
+.pay-btn:hover.borr{background:var(--rose);color:#fff}
+.done-badge{font-size:.72rem;color:var(--muted);background:rgba(255,255,255,.05);padding:5px 12px;border-radius:8px}
+.debt-del-btn{
+  position:absolute;top:13px;left:13px;
+  width:28px;height:28px;border-radius:8px;border:none;
+  background:none;color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .2s;
+}
+.debt-del-btn:hover{background:var(--rose-dim);color:var(--rose)}
+.debt-done{opacity:.38;filter:grayscale(.5)}
+
+/* ════════════════════════════════════════
+   ANALYTICS
+════════════════════════════════════════ */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.kpi{background:rgba(13,22,45,.7);border:1px solid var(--border2);border-radius:var(--r2);padding:14px}
+.kpi-l{font-size:.67rem;color:var(--muted);margin-bottom:6px}
+.kpi-v{font-family:'Space Mono',monospace;font-size:1.2rem;font-weight:700}
+.chart-block{background:rgba(13,22,45,.7);border:1px solid var(--border2);border-radius:var(--r2);padding:18px;margin-bottom:14px}
+.chart-t{font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.chart-s{font-size:.69rem;color:var(--muted);margin-bottom:14px}
+.rule-item{margin-bottom:12px}
+.rule-head{display:flex;justify-content:space-between;font-size:.76rem;margin-bottom:5px}
+.rule-track{height:7px;border-radius:50px;background:rgba(255,255,255,.06);overflow:hidden}
+.rule-fill{height:100%;border-radius:50px;transition:width 1s cubic-bezier(.16,1,.3,1)}
+
+/* ════════════════════════════════════════
+   BOTTOM NAV
+════════════════════════════════════════ */
+#nav{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom,8px) + 6px);
+  left:50%;transform:translateX(-50%);
+  width:calc(100% - 28px);max-width:450px;height:var(--nav-h);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 10px;z-index:500;border-radius:26px;
+  background:rgba(7,13,28,.96);
+  border:1px solid var(--border2);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  box-shadow:0 18px 50px rgba(0,0,0,.6);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 10px;border-radius:15px;cursor:pointer;
+  transition:all .22s;color:var(--muted);background:none;border:none;
+  font-family:inherit;min-width:50px;
+}
+.nav-btn.active{background:rgba(212,168,67,.1);color:var(--gold)}
+.nav-btn i{font-size:1.05rem}
+.nav-btn span{font-size:.6rem;font-weight:600}
+
+/* FAB */
+.fab-wrap{position:relative}
+.fab{
+  width:52px;height:52px;border-radius:17px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--gold),#B8882A);
+  color:#060B1A;font-size:1.25rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 20px rgba(212,168,67,.38);
+  transition:all .22s;position:relative;z-index:2;margin-top:-10px;
+}
+.fab:active{transform:scale(.93)}
+.fab i{transition:transform .28s}
+.fab.open i{transform:rotate(45deg)}
+.fab-menu{
+  position:absolute;bottom:calc(100% + 10px);left:50%;
+  transform:translateX(-50%) scale(.88) translateY(10px);
+  display:flex;flex-direction:column;gap:7px;align-items:center;
+  pointer-events:none;opacity:0;
+  transition:all .3s cubic-bezier(.16,1,.3,1);z-index:1;
+}
+.fab-menu.open{pointer-events:auto;opacity:1;transform:translateX(-50%) scale(1) translateY(0)}
+.fab-item{
+  white-space:nowrap;padding:10px 18px;border-radius:14px;border:none;
+  font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;gap:8px;font-family:inherit;
+  background:rgba(7,13,28,.97);border:1px solid var(--border2);
+  box-shadow:0 8px 24px rgba(0,0,0,.4);
+}
+.fab-item.inc{color:var(--teal)}.fab-item.exp{color:var(--rose)}
+
+/* ════════════════════════════════════════
+   OVERLAY & SHEETS
+════════════════════════════════════════ */
+#overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.68);
+  z-index:800;opacity:0;pointer-events:none;
+  transition:opacity .3s;backdrop-filter:blur(4px);
+}
+#overlay.show{opacity:1;pointer-events:auto}
+.sheet{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(101%);
+  width:100%;max-width:480px;z-index:900;
+  background:rgba(7,14,30,.98);
+  border-top:1px solid var(--border);
+  border-radius:32px 32px 0 0;
+  padding:0 20px calc(env(safe-area-inset-bottom,14px) + 26px);
+  max-height:92dvh;overflow-y:auto;
+  transition:transform .44s cubic-bezier(.32,1.05,.36,1);
+  box-shadow:0 -18px 50px rgba(0,0,0,.55);
+}
+.sheet.show{transform:translateX(-50%) translateY(0)}
+.sh-handle{width:38px;height:4px;border-radius:4px;background:rgba(255,255,255,.12);margin:13px auto 0}
+.sh-head{display:flex;justify-content:space-between;align-items:center;padding:18px 0 14px}
+.sh-title{font-size:1.08rem;font-weight:700}
+.close-btn{
+  width:30px;height:30px;border-radius:10px;border:none;
+  background:rgba(255,255,255,.06);color:var(--muted);
+  font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.close-btn:hover{background:var(--rose-dim);color:var(--rose)}
+
+/* ════════════════════════════════════════
+   FORMS
+════════════════════════════════════════ */
+.fg{margin-bottom:14px}
+.fl{font-size:.7rem;font-weight:700;color:var(--muted);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.05em}
+.fi,.fsel{
+  width:100%;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;padding:12px 14px;
+  color:var(--text);font-size:.88rem;font-family:inherit;
+  outline:none;transition:all .22s;-webkit-appearance:none;
+}
+.fi:focus,.fsel:focus{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.03);box-shadow:0 0 0 3px rgba(212,168,67,.07)}
+.amt-input{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:18px;padding:18px;
+  font-family:'Space Mono',monospace;font-size:1.9rem;font-weight:700;
+  text-align:center;color:#fff;outline:none;transition:all .22s;
+}
+.amt-input:focus{border-color:var(--gold);background:rgba(212,168,67,.03);box-shadow:0 0 0 3px rgba(212,168,67,.07)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.sel-wrap{position:relative}
+.sel-wrap i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.72rem;pointer-events:none}
+::placeholder{color:var(--muted)}
+
+/* Type Toggle */
+.tt-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.tt{
+  padding:13px;border-radius:16px;border:1.5px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.03);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .2s;
+  font-family:inherit;color:var(--muted);
+}
+.tt i{font-size:1rem}.tt span{font-size:.76rem;font-weight:700}
+.tt.a-inc{border-color:var(--teal);background:var(--teal-dim);color:var(--teal)}
+.tt.a-exp{border-color:var(--rose);background:var(--rose-dim);color:var(--rose)}
+
+/* Pills */
+.pill-row{display:flex;gap:7px;flex-wrap:wrap}
+.pill{
+  padding:7px 14px;border-radius:50px;border:1.5px solid rgba(255,255,255,.08);
+  font-size:.75rem;font-weight:600;cursor:pointer;transition:all .18s;color:var(--muted);background:rgba(255,255,255,.03);
+}
+.pill:hover{border-color:rgba(212,168,67,.3);color:var(--gold)}
+.pill.a-needs{background:var(--violet-dim);border-color:var(--violet);color:var(--violet)}
+.pill.a-wants{background:rgba(217,70,239,.1);border-color:#d946ef;color:#e879f9}
+.pill.a-savings{background:var(--teal-dim);border-color:var(--teal);color:var(--teal)}
+
+/* Category chips */
+.cat-chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:3px;margin-top:7px}
+.cat-chip{
+  flex-shrink:0;padding:5px 11px;border-radius:50px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+  font-size:.7rem;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.cat-chip:hover{background:var(--gold-dim);border-color:var(--border);color:var(--gold)}
+
+/* Submit Button */
+.btn{
+  width:100%;padding:15px;border-radius:16px;border:none;
+  font-size:.92rem;font-weight:700;cursor:pointer;
+  transition:all .2s;font-family:inherit;margin-top:6px;letter-spacing:.02em;
+}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#B8882A);color:#060B1A;box-shadow:0 6px 20px rgba(212,168,67,.28)}
+.btn-gold:active{transform:scale(.98)}
+
+/* Settings rows */
+.set-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--border2)}
+.set-row:last-of-type{border-bottom:none}
+.set-lbl{font-size:.86rem;font-weight:600}
+.set-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+.set-act{
+  padding:7px 14px;border-radius:11px;border:1px solid var(--border);
+  background:var(--gold-dim);color:var(--gold);font-size:.76rem;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:all .2s;white-space:nowrap;
+}
+.set-act:hover{background:rgba(212,168,67,.2)}
+
+/* File section in settings */
+.file-section{
+  background:rgba(212,168,67,.04);border:1px solid var(--border);
+  border-radius:var(--r2);padding:16px;margin-bottom:16px;
+}
+.file-section-title{font-size:.8rem;font-weight:700;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.file-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.file-row:last-child{margin-bottom:0}
+.file-row-label{font-size:.82rem;font-weight:600}
+.file-row-sub{font-size:.7rem;color:var(--muted);margin-top:1px}
+.file-btn{
+  padding:7px 14px;border-radius:11px;border:none;
+  font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;
+}
+.file-btn.gold{background:var(--gold-dim);color:var(--gold)}
+.file-btn.gold:hover{background:rgba(212,168,67,.2)}
+.file-btn.teal{background:var(--teal-dim);color:var(--teal)}
+.file-btn.teal:hover{background:rgba(34,211,176,.2)}
+.file-btn.rose{background:var(--rose-dim);color:var(--rose)}
+.file-btn.rose:hover{background:rgba(255,107,138,.2)}
+.no-fs-note{
+  font-size:.74rem;color:var(--muted);
+  background:rgba(255,255,255,.03);border:1px solid var(--border2);
+  border-radius:12px;padding:10px 13px;
+  display:flex;gap:8px;align-items:flex-start;line-height:1.5;
+}
+.no-fs-note i{color:var(--gold);flex-shrink:0;margin-top:1px}
+
+/* Confirm Dialog */
+.confirm-dialog{
+  position:fixed;inset:0;z-index:9000;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.confirm-dialog.show{opacity:1;pointer-events:auto}
+.confirm-bg{position:fixed;inset:0;background:rgba(0,0,0,.72)}
+.confirm-box{
+  background:rgba(7,14,30,.98);border:1px solid var(--border);
+  border-radius:24px;padding:24px;max-width:310px;width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,.8);animation:pop .3s cubic-bezier(.16,1,.3,1);
+  position:relative;z-index:1;
+}
+.confirm-ico{width:50px;height:50px;border-radius:16px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:1.35rem}
+.confirm-title{font-size:.98rem;font-weight:700;text-align:center;margin-bottom:7px}
+.confirm-msg{font-size:.8rem;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:18px}
+.confirm-acts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.c-cancel{padding:11px;border-radius:13px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--muted);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.c-ok{padding:11px;border-radius:13px;border:none;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+
+/* Ripple */
+.ripple-wrap{position:relative;overflow:hidden}
+.ripple-el{position:absolute;border-radius:50%;background:rgba(255,255,255,.1);transform:scale(0);animation:ripple .5s linear;pointer-events:none}
+
+/* Month nav */
+.month-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:14px}
+.mnav-btn{
+  width:34px;height:34px;border-radius:11px;border:1px solid var(--border2);
+  background:rgba(255,255,255,.04);color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:.82rem;transition:all .2s;
+}
+.mnav-btn:hover{background:var(--gold-dim);color:var(--gold);border-color:var(--border)}
+.month-lbl{font-size:.92rem;font-weight:700;min-width:120px;text-align:center}
+
+/* Search & filter */
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap i{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.82rem}
+.search-inp{
+  width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border2);
+  border-radius:50px;padding:10px 38px 10px 16px;
+  color:var(--text);font-size:.83rem;font-family:inherit;outline:none;transition:all .22s;
+}
+.search-inp:focus{border-color:rgba(212,168,67,.3);background:rgba(212,168,67,.03)}
+.filter-row{display:flex;gap:7px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px}
+.fchip{flex-shrink:0;padding:6px 13px;border-radius:50px;border:1px solid var(--border2);background:rgba(255,255,255,.03);font-size:.73rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .18s}
+.fchip.active{background:var(--gold-dim);border-color:var(--border);color:var(--gold)}
+
+/* Transfer */
+.divider{height:1px;background:var(--border2);margin:14px 0}
+.transfer-wrap{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.transfer-wrap .sel-wrap{flex:1}
+.transfer-arrow{color:var(--muted);font-size:.9rem;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════
+     WELCOME SCREEN
+════════════════════════════════════════ -->
+<div id="welcome" class="hidden">
+  <div class="welcome-box">
+    <div class="w-logo"><i class="fa-solid fa-wallet"></i></div>
+    <div class="w-badge">PRO</div>
+    <h1 class="w-title">محفظتي</h1>
+    <p class="w-sub">إدارة أموالك بذكاء وأمان<br>في مكان واحد</p>
+    <p class="w-file-label">اختر طريقة حفظ بياناتك</p>
+
+    <button id="wBtnNew" class="w-opt primary" onclick="chooseNewFile()">
+      <div class="w-icon"><i class="fa-solid fa-file-circle-plus"></i></div>
+      <div class="w-opt-text">
+        <div class="w-opt-title">إنشاء ملف بيانات جديد</div>
+        <div class="w-opt-desc">موصى به — حفظ دائم ومزامنة تلقائية</div>
+      </div>
+    </button>
+
+    <button id="wBtnOpen" class="w-opt" onclick="openExistingFile()">
+      <div class="w-icon teal"><i class="fa-solid fa-folder-open"></i></div>
+      <div class="w-opt-text">
+        <div class="w-opt-title">فتح ملف موجود</div>
+        <div class="w-opt-desc">استئناف من نسخة احتياطية سابقة</div>
+      </div>
+    </button>
+
+    <button class="w-skip" onclick="useLocalOnly()">
+      متابعة بالحفظ المحلي فقط (بدون ملف)
+    </button>
+
+    <div class="w-compat-note" id="wCompatNote" style="display:none">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>ميزة ربط الملف تتطلب متصفح Chrome أو Edge. يمكنك متابعة بالحفظ المحلي واستخدام التصدير/الاستيراد اليدوي.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     TOAST
+════════════════════════════════════════ -->
+<div id="toast" style="position:fixed;top:calc(env(safe-area-inset-top,10px)+10px);left:50%;transform:translateX(-50%);z-index:9999;min-width:200px;max-width:340px;display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:50px;font-size:.8rem;font-weight:600;white-space:nowrap;pointer-events:none;opacity:0;background:rgba(7,14,30,.97);border:1px solid var(--border2);box-shadow:0 14px 36px rgba(0,0,0,.55)">
+  <div id="toastIco" style="width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<!-- ════════════════════════════════════════
+     MAIN APP
+════════════════════════════════════════ -->
+<div class="wrap">
+
+  <!-- Header -->
+  <header class="header fade-up">
+    <div class="hdr-logo">
+      <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
+      <div>
+        <div class="logo-name"><span class="pro-tag">PRO</span>محفظتي</div>
+        <div class="greet" id="greetTxt">مرحباً بك</div>
+      </div>
+    </div>
+    <button class="icon-btn" onclick="openSettingsSheet()"><i class="fa-solid fa-sliders"></i></button>
+  </header>
+
+  <!-- Sync Bar -->
+  <div id="syncBar" class="fade-up s1"></div>
+
+  <!-- ── HOME VIEW ── -->
+  <div id="view-home" class="view active">
+    <div class="bal-card fade-up s1" id="balCard">
+      <div class="bal-shimmer"></div>
+      <div class="card-top">
+        <div>
+          <div class="bal-lbl">إجمالي الرصيد</div>
+          <div class="bal-amt"><span class="bal-cur" id="curBal">ج.م</span><span id="totalBal">0.00</span></div>
+        </div>
+        <div class="card-chip"></div>
+      </div>
+      <div class="card-stats">
+        <div class="stat-block">
+          <div class="stat-lbl"><span class="sdot" style="background:var(--teal);box-shadow:0 0 5px var(--teal)"></span>الدخل الشهري</div>
+          <div class="stat-val" style="color:var(--teal)" id="homeInc">0.00</div>
+        </div>
+        <div class="stat-block" style="text-align:left">
+          <div class="stat-lbl" style="justify-content:flex-end"><span class="sdot" style="background:var(--rose);box-shadow:0 0 5px var(--rose)"></span>المصروف الشهري</div>
+          <div class="stat-val" style="color:var(--rose)" id="homeExp">0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="qa-grid fade-up s2">
+      <button class="qa-btn inc ripple-wrap" onclick="openTx('income');addRipple(event)">
+        <div class="qa-icon"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        <span>إضافة دخل</span>
+      </button>
+      <button class="qa-btn exp ripple-wrap" onclick="openTx('expense');addRipple(event)">
+        <div class="qa-icon"><i class="fa-solid fa-arrow-trend-down"></i></div>
+        <span>تسجيل مصروف</span>
+      </button>
+    </div>
+
+    <div class="fade-up s3">
+      <div class="sec-hdr">
+        <div><div class="sec-title">آخر المعاملات</div><div class="sec-sub">نشاطك المالي الأخير</div></div>
+        <button class="sec-link" onclick="switchView('txs')">الكل ←</button>
+      </div>
+      <div id="recentList"></div>
+    </div>
+  </div>
+
+  <!-- ── TRANSACTIONS VIEW ── -->
+  <div id="view-txs" class="view">
+    <div class="sec-hdr" style="padding-top:2px">
+      <div><div class="sec-title">المعاملات</div></div>
+    </div>
+    <div class="month-nav">
+      <button class="mnav-btn" onclick="prevMonth()"><i class="fa-solid fa-chevron-right"></i></button>
+      <div class="month-lbl" id="txMonthLbl"></div>
+      <button class="mnav-btn" onclick="nextMonth()"><i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input class="search-inp" placeholder="بحث…" id="searchInp" oninput="renderTxs()">
+    </div>
+    <div class="filter-row">
+      <div class="fchip active" data-f="all" onclick="setFilter('all')">الكل</div>
+      <div class="fchip" data-f="income" onclick="setFilter('income')">دخل</div>
+      <div class="fchip" data-f="expense" onclick="setFilter('expense')">مصروف</div>
+    </div>
+    <div id="txList"></div>
+  </div>
+
+  <!-- ── WALLETS VIEW ── -->
+  <div id="view-wallets" class="view">
+    <div class="sec-hdr" style="padding-top:2px">
+      <div><div class="sec-title">المحافظ</div><div class="sec-sub">إدارة حساباتك</div></div>
+      <button class="add-btn" onclick="openSheet('wallet')"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    <div id="walletsList"></div>
+    <button id="transferBtn" onclick="openTransfer()"
+      style="width:100%;padding:13px;border-radius:16px;border:1.5px dashed rgba(255,255,255,.1);background:rgba(255,255,255,.02);color:var(--muted);font-family:inherit;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px">
+      <i class="fa-solid fa-arrow-right-arrow-left"></i> تحويل بين المحافظ
+    </button>
+  </div>
+
+  <!-- ── DEBTS VIEW ── -->
+  <div id="view-debts" class="view">
+    <div class="sec-hdr" style="padding-top:2px">
+      <div><div class="sec-title">الديون</div><div class="sec-sub">التزاماتك وحقوقك المالية</div></div>
+      <button class="add-btn" onclick="openDebtSheet()"><i class="fa-solid fa-plus"></i></button>
+    </div>
+    <div class="debt-summary">
+      <div class="ds-card lent"><div class="ds-lbl">أقرضته (لي)</div><div class="ds-val lent" id="totalLent">0.00</div></div>
+      <div class="ds-card borr"><div class="ds-lbl">استدنت (علي)</div><div class="ds-val borr" id="totalBorr">0.00</div></div>
+    </div>
+    <div id="debtsList"></div>
+  </div>
+
+  <!-- ── ANALYTICS VIEW ── -->
+  <div id="view-analytics" class="view">
+    <div class="sec-hdr" style="padding-top:2px">
+      <div><div class="sec-title">التحليلات</div><div class="sec-sub">فهم أعمق لأموالك</div></div>
+    </div>
+    <div class="month-nav">
+      <button class="mnav-btn" onclick="prevMonthA()"><i class="fa-solid fa-chevron-right"></i></button>
+      <div class="month-lbl" id="aMonthLbl"></div>
+      <button class="mnav-btn" onclick="nextMonthA()"><i class="fa-solid fa-chevron-left"></i></button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-l">إجمالي الدخل</div><div class="kpi-v" style="color:var(--teal)" id="aInc">0.00</div></div>
+      <div class="kpi"><div class="kpi-l">إجمالي المصروف</div><div class="kpi-v" style="color:var(--rose)" id="aExp">0.00</div></div>
+      <div class="kpi"><div class="kpi-l">صافي التوفير</div><div class="kpi-v" id="aNet">0.00</div></div>
+      <div class="kpi"><div class="kpi-l">نسبة التوفير</div><div class="kpi-v" style="color:var(--gold)" id="aSavePct">0%</div></div>
+    </div>
+    <div class="chart-block">
+      <div class="chart-t"><i class="fa-solid fa-chart-pie" style="color:var(--gold)"></i> قاعدة 50/30/20</div>
+      <div class="chart-s">توزيع مصروفاتك مقارنةً بدخلك</div>
+      <div style="position:relative;height:155px;display:flex;justify-content:center;margin-bottom:16px">
+        <canvas id="donutChart"></canvas>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+          <span style="font-size:.67rem;color:var(--muted)">الصرف الكلي</span>
+          <span style="font-family:'Space Mono',monospace;font-size:.9rem;font-weight:700" id="donutTotal">0.00</span>
+        </div>
+      </div>
+      <div id="ruleBars"></div>
+    </div>
+    <div class="chart-block">
+      <div class="chart-t"><i class="fa-solid fa-chart-column" style="color:var(--teal)"></i> الاتجاه الشهري</div>
+      <div class="chart-s">آخر 6 أشهر — دخل مقابل مصروف</div>
+      <div style="height:175px"><canvas id="barChart"></canvas></div>
+    </div>
+  </div>
+
+</div><!-- .wrap -->
+
+<!-- ════════════════════════════════════════
+     BOTTOM NAV
+════════════════════════════════════════ -->
+<nav id="nav">
+  <button class="nav-btn active" data-v="home" onclick="switchView('home')"><i class="fa-solid fa-house"></i><span>الرئيسية</span></button>
+  <button class="nav-btn" data-v="txs" onclick="switchView('txs')"><i class="fa-solid fa-list-ul"></i><span>المعاملات</span></button>
+  <div class="fab-wrap">
+    <div class="fab-menu" id="fabMenu">
+      <button class="fab-item exp" onclick="closeFab();openTx('expense')"><i class="fa-solid fa-arrow-up"></i>مصروف</button>
+      <button class="fab-item inc" onclick="closeFab();openTx('income')"><i class="fa-solid fa-arrow-down"></i>دخل</button>
+    </div>
+    <button class="fab" id="fabBtn" onclick="toggleFab()"><i class="fa-solid fa-plus" id="fabIco"></i></button>
+  </div>
+  <button class="nav-btn" data-v="debts" onclick="switchView('debts')"><i class="fa-solid fa-handshake"></i><span>الديون</span></button>
+  <button class="nav-btn" data-v="analytics" onclick="switchView('analytics')"><i class="fa-solid fa-chart-simple"></i><span>تحليل</span></button>
+</nav>
+
+<!-- Overlay -->
+<div id="overlay" onclick="closeAllSheets()"></div>
+
+<!-- ════════════════════════════════════════
+     SHEETS
+════════════════════════════════════════ -->
+
+<!-- Transaction Sheet -->
+<div class="sheet" id="sheet-tx">
+  <div class="sh-handle"></div>
+  <div class="sh-head"><div class="sh-title" id="txTitle">إضافة معاملة</div><button class="close-btn" onclick="closeSheet('tx')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="tt-grid" id="txTypeToggle">
+    <button class="tt a-inc" id="ttInc" onclick="setTxType('income')"><i class="fa-solid fa-arrow-trend-up"></i><span>دخل</span></button>
+    <button class="tt" id="ttExp" onclick="setTxType('expense')"><i class="fa-solid fa-arrow-trend-down"></i><span>مصروف</span></button>
+  </div>
+  <div class="fg"><label class="fl">المبلغ</label><input class="amt-input" type="number" id="txAmt" placeholder="0.00" step="any" min="0.01" inputmode="decimal"></div>
+  <div class="fgrid fg">
+    <div>
+      <label class="fl">المحفظة</label>
+      <div class="sel-wrap"><select class="fsel" id="txWallet"></select><i class="fa-solid fa-chevron-down"></i></div>
+    </div>
+    <div><label class="fl">التاريخ</label><input class="fi" type="date" id="txDate"></div>
+  </div>
+  <div class="fg">
+    <label class="fl">البيان / التصنيف</label>
+    <input class="fi" type="text" id="txCat" placeholder="راتب، قهوة، بنزين…" autocomplete="off" maxlength="60">
+    <div class="cat-chips" id="catChips"></div>
+  </div>
+  <div class="fg" id="ruleGroup" style="display:none">
+    <label class="fl">تصنيف قاعدة 50/30/20</label>
+    <div class="pill-row">
+      <div class="pill a-needs" data-r="needs" onclick="setRule(this)">أساسيات 50%</div>
+      <div class="pill" data-r="wants" onclick="setRule(this)">رغبات 30%</div>
+      <div class="pill" data-r="savings" onclick="setRule(this)">ادخار 20%</div>
+    </div>
+  </div>
+  <button class="btn btn-gold" onclick="saveTx()">تأكيد العملية</button>
+</div>
+
+<!-- Wallet Sheet -->
+<div class="sheet" id="sheet-wallet">
+  <div class="sh-handle"></div>
+  <div class="sh-head"><div class="sh-title">محفظة جديدة</div><button class="close-btn" onclick="closeSheet('wallet')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="fg"><label class="fl">اسم المحفظة</label><input class="fi" type="text" id="wName" placeholder="كاش، بنك، محفظة رقمية…" maxlength="40"></div>
+  <div class="fg"><label class="fl">الرصيد الافتتاحي</label><input class="amt-input" type="number" id="wBal" placeholder="0.00" step="any" inputmode="decimal"></div>
+  <button class="btn btn-gold" onclick="saveWallet()">إضافة المحفظة</button>
+</div>
+
+<!-- Transfer Sheet -->
+<div class="sheet" id="sheet-transfer">
+  <div class="sh-handle"></div>
+  <div class="sh-head"><div class="sh-title">تحويل بين المحافظ</div><button class="close-btn" onclick="closeSheet('transfer')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="fg">
+    <label class="fl">من / إلى</label>
+    <div class="transfer-wrap">
+      <div class="sel-wrap" style="flex:1"><select class="fsel" id="tFrom"></select><i class="fa-solid fa-chevron-down"></i></div>
+      <i class="fa-solid fa-arrow-right-arrow-left transfer-arrow"></i>
+      <div class="sel-wrap" style="flex:1"><select class="fsel" id="tTo"></select><i class="fa-solid fa-chevron-down"></i></div>
+    </div>
+  </div>
+  <div class="fg"><label class="fl">المبلغ</label><input class="amt-input" type="number" id="tAmt" placeholder="0.00" step="any" inputmode="decimal"></div>
+  <button class="btn btn-gold" onclick="doTransfer()">تنفيذ التحويل</button>
+</div>
+
+<!-- Debt Sheet -->
+<div class="sheet" id="sheet-debt">
+  <div class="sh-handle"></div>
+  <div class="sh-head"><div class="sh-title">تسجيل دين</div><button class="close-btn" onclick="closeSheet('debt')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="tt-grid">
+    <button class="tt a-inc" id="dtLent" onclick="setDebtType('lent')"><i class="fa-solid fa-arrow-up-right-dots"></i><span>أقرضته</span></button>
+    <button class="tt" id="dtBorr" onclick="setDebtType('borrowed')"><i class="fa-solid fa-arrow-down-right-dots"></i><span>استلفت</span></button>
+  </div>
+  <div class="fg"><label class="fl">اسم الشخص</label><input class="fi" type="text" id="dPerson" placeholder="محمد، أحمد…" maxlength="40"></div>
+  <div class="fg"><label class="fl">المبلغ</label><input class="amt-input" type="number" id="dAmt" placeholder="0.00" step="any" inputmode="decimal"></div>
+  <button class="btn btn-gold" onclick="saveDebt()">حفظ</button>
+</div>
+
+<!-- Repay Sheet -->
+<div class="sheet" id="sheet-repay">
+  <div class="sh-handle"></div>
+  <div class="sh-head"><div class="sh-title">تسجيل دفعة سداد</div><button class="close-btn" onclick="closeSheet('repay')"><i class="fa-solid fa-xmark"></i></button></div>
+  <div style="text-align:center;margin-bottom:18px">
+    <div style="font-size:.88rem;font-weight:700" id="repayName"></div>
+    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">المتبقي: <span style="font-family:'Space Mono',monospace;color:var(--gold)" id="repayRemain"></span></div>
+  </div>
+  <div class="fg"><label class="fl">مبلغ الدفعة</label><input class="amt-input" type="number" id="repayAmt" placeholder="0.00" step="any" inputmode="decimal"></div>
+  <button class="btn btn-gold" onclick="doRepay()">تأكيد السداد</button>
+</div>
+
+<!-- Settings Sheet -->
+<div class="sheet" id="sheet-settings">
+  <div class="sh-handle"></div>
+  <div class="sh-head"><div class="sh-title">الإعدادات</div><button class="close-btn" onclick="closeSheet('settings')"><i class="fa-solid fa-xmark"></i></button></div>
+
+  <!-- File Sync Section -->
+  <div class="file-section" id="fileSyncSection">
+    <div class="file-section-title"><i class="fa-solid fa-file-lines"></i> مزامنة الملف</div>
+    <div id="fileStatus" style="font-size:.78rem;color:var(--muted);margin-bottom:12px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border2)"></div>
+    <div id="fileActions"></div>
+    <div id="noFsNote" class="no-fs-note" style="display:none"><i class="fa-solid fa-circle-info"></i><span>المتصفح الحالي لا يدعم ربط الملفات. استخدم Chrome أو Edge للحصول على المزامنة التلقائية.</span></div>
+  </div>
+
+  <div class="fg"><label class="fl">العملة الأساسية</label><input class="fi" type="text" id="setCur" placeholder="ج.م" style="text-align:center;font-size:1.1rem;font-weight:700" maxlength="10"></div>
+
+  <div class="divider"></div>
+
+  <div class="set-row">
+    <div><div class="set-lbl">تصدير Excel</div><div class="set-sub">جدول بكل المعاملات</div></div>
+    <button class="set-act" onclick="exportCSV()"><i class="fa-solid fa-file-csv"></i> تصدير</button>
+  </div>
+  <div class="set-row">
+    <div><div class="set-lbl">تنزيل نسخة احتياطية</div><div class="set-sub">ملف JSON بكل البيانات</div></div>
+    <button class="set-act" onclick="exportJSON()"><i class="fa-solid fa-cloud-arrow-down"></i> تنزيل</button>
+  </div>
+  <div class="set-row">
+    <div><div class="set-lbl">استيراد نسخة احتياطية</div><div class="set-sub">استعادة من ملف JSON</div></div>
+    <label class="set-act" style="cursor:pointer"><i class="fa-solid fa-cloud-arrow-up"></i> استيراد<input type="file" accept=".json" style="display:none" onchange="importJSON(event)"></label>
+  </div>
+
+  <div class="divider"></div>
+
+  <button onclick="confirmClearAll()" style="width:100%;padding:11px;border-radius:13px;border:1px solid rgba(255,107,138,.2);background:var(--rose-dim);color:var(--rose);font-family:inherit;font-size:.83rem;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:6px"
+    onmouseenter="this.style.background='rgba(255,107,138,.2)'" onmouseleave="this.style.background='var(--rose-dim)'">
+    <i class="fa-solid fa-trash"></i> مسح كل البيانات
+  </button>
+
+  <button class="btn btn-gold" onclick="saveSettings()">حفظ الإعدادات</button>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-dialog" id="confirmDialog">
+  <div class="confirm-bg" onclick="confirmCancel()"></div>
+  <div class="confirm-box">
+    <div class="confirm-ico" id="cIco"></div>
+    <div class="confirm-title" id="cTitle"></div>
+    <div class="confirm-msg" id="cMsg"></div>
+    <div class="confirm-acts">
+      <button class="c-cancel" onclick="confirmCancel()">إلغاء</button>
+      <button class="c-ok" id="cOk" onclick="confirmDo()"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════ -->
+<script>
+'use strict';
+
+/* ══════════════════════════════════════
+   CONSTANTS
+══════════════════════════════════════ */
+const LS_KEY = 'mahfazati_v3';
+const FS_SUPPORTED = 'showOpenFilePicker' in window && 'showSaveFilePicker' in window;
+const MONTH_NAMES = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let app = {
+  settings: { currency: 'ج.م' },
+  wallets: [{ id: 1, name: 'المحفظة النقدية', balance: 0 }],
+  txs: [],
+  debts: []
+};
+let fileHandle      = null;
+let syncStatus      = 'idle';   // idle | syncing | synced | error | unsaved
+let lastSyncTime    = null;
+let syncDebounce    = null;
+let autoSyncTimer   = null;
+let donutChartInst  = null;
+let barChartInst    = null;
+let currentFilter   = 'all';
+let txViewMonth, analyticsMonth;
+let currentTxType   = 'income';
+let currentDebtType = 'lent';
+let currentRule     = 'needs';
+let activeRepayId   = null;
+let confirmCb       = null;
+let txTypeFixed     = false;
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+const $    = id => document.getElementById(id);
+const fmt  = n  => parseFloat(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const today = () => new Date().toISOString().split('T')[0];
+const vib  = ()  => { try { navigator.vibrate && navigator.vibrate(30); } catch {} };
+const monthLabel = m => { const [y,mo]=m.split('-'); return MONTH_NAMES[parseInt(mo)-1]+' '+y; };
+const curMonth   = () => new Date().toISOString().slice(0,7);
+const shiftMonth = (m, d) => {
+  let [y,mo] = m.split('-').map(Number);
+  mo += d; if(mo>12){mo=1;y++;} if(mo<1){mo=12;y--;}
+  return `${y}-${String(mo).padStart(2,'0')}`;
+};
+
+/* ══════════════════════════════════════
+   INDEXED DB (persist file handles)
+══════════════════════════════════════ */
+const idb = {
+  db: null,
+  async open() {
+    return new Promise((res, rej) => {
+      const req = indexedDB.open('MahfazatiDB_v1', 1);
+      req.onupgradeneeded = () => req.result.createObjectStore('kv');
+      req.onsuccess = () => { this.db = req.result; res(); };
+      req.onerror = () => rej(req.error);
+    });
+  },
+  async set(key, val) {
+    if (!this.db) return;
+    return new Promise((res, rej) => {
+      const tx = this.db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').put(val, key);
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+  },
+  async get(key) {
+    if (!this.db) return null;
+    return new Promise(res => {
+      const tx = this.db.transaction('kv', 'readonly');
+      const req = tx.objectStore('kv').get(key);
+      req.onsuccess = () => res(req.result ?? null);
+      req.onerror = () => res(null);
+    });
+  },
+  async del(key) {
+    if (!this.db) return;
+    return new Promise(res => {
+      const tx = this.db.transaction('kv', 'readwrite');
+      tx.objectStore('kv').delete(key);
+      tx.oncomplete = res;
+      tx.onerror = res;
+    });
+  }
+};
+
+/* ══════════════════════════════════════
+   FILE SYSTEM API
+══════════════════════════════════════ */
+async function verifyPermission(handle) {
+  try {
+    const opts = { mode: 'readwrite' };
+    if ((await handle.queryPermission(opts)) === 'granted') return true;
+    if ((await handle.requestPermission(opts)) === 'granted') return true;
+    return false;
+  } catch { return false; }
+}
+
+async function loadFromFile() {
+  if (!fileHandle) return false;
+  try {
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.wallets || !data.txs || !data.debts) throw new Error('invalid format');
+    app = data;
+    ensureAppStructure();
+    localStorage.setItem(LS_KEY, JSON.stringify(app));
+    return true;
+  } catch(e) {
+    console.warn('File load error:', e);
+    return false;
+  }
+}
+
+async function syncToFile(force = false) {
+  if (!fileHandle) return;
+  if (syncStatus === 'syncing' && !force) return;
+  setSyncStatus('syncing');
+  updateSyncBar();
+  try {
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify(app, null, 2));
+    await writable.close();
+    lastSyncTime = new Date();
+    setSyncStatus('synced');
+  } catch(e) {
+    console.warn('Sync error:', e);
+    setSyncStatus(e.name === 'NotAllowedError' ? 'error' : 'error');
+    if (e.name === 'NotAllowedError') toast('انتهت صلاحية الملف', 'error');
+  }
+  updateSyncBar();
+}
+
+function scheduleSyncToFile() {
+  if (!fileHandle) return;
+  clearTimeout(syncDebounce);
+  setSyncStatus('unsaved');
+  updateSyncBar();
+  syncDebounce = setTimeout(() => syncToFile(), 3500);
+}
+
+function startAutoSync() {
+  stopAutoSync();
+  if (fileHandle) autoSyncTimer = setInterval(() => syncToFile(), 60000);
+}
+function stopAutoSync() { clearInterval(autoSyncTimer); autoSyncTimer = null; }
+
+async function chooseNewFile() {
+  if (!FS_SUPPORTED) { toast('المتصفح لا يدعم هذه الميزة', 'error'); return; }
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'mahfazati_data.json',
+      types: [{ description: 'ملف بيانات محفظتي', accept: { 'application/json': ['.json'] } }]
+    });
+    fileHandle = handle;
+    await idb.set('fileHandle', handle);
+    await syncToFile(true);
+    startAutoSync();
+    updateSyncBar();
+    hideWelcome();
+    toast('تم إنشاء ملف البيانات ✓');
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('تعذّر إنشاء الملف', 'error');
+  }
+}
+
+async function openExistingFile() {
+  if (!FS_SUPPORTED) { toast('المتصفح لا يدعم هذه الميزة', 'error'); return; }
+  try {
+    const [handle] = await window.showOpenFilePicker({
+      types: [{ description: 'ملف بيانات محفظتي', accept: { 'application/json': ['.json'] } }]
+    });
+    fileHandle = handle;
+    const ok = await loadFromFile();
+    if (!ok) { fileHandle = null; toast('الملف غير صالح أو تالف', 'error'); return; }
+    await idb.set('fileHandle', handle);
+    startAutoSync();
+    setSyncStatus('synced'); lastSyncTime = new Date();
+    updateSyncBar();
+    hideWelcome();
+    switchView('home');
+    toast('تم فتح الملف وتحميل البيانات ✓');
+  } catch(e) {
+    if (e.name !== 'AbortError') toast('تعذّر فتح الملف', 'error');
+  }
+}
+
+async function detachFile() {
+  fileHandle = null;
+  stopAutoSync();
+  setSyncStatus('idle');
+  await idb.del('fileHandle');
+  updateSyncBar();
+  renderFileSettings();
+  toast('تم فصل الملف — يحفظ محلياً فقط');
+}
+
+async function reattachFile() {
+  if (!fileHandle) { await openExistingFile(); return; }
+  const ok = await verifyPermission(fileHandle);
+  if (ok) { startAutoSync(); await syncToFile(true); updateSyncBar(); toast('تم إعادة الربط ✓'); }
+  else toast('رُفض الوصول للملف', 'error');
+}
+
+function useLocalOnly() {
+  hideWelcome();
+  toast('يحفظ على الجهاز فقط. يمكنك ربط ملف من الإعدادات');
+}
+
+/* ══════════════════════════════════════
+   SYNC STATUS
+══════════════════════════════════════ */
+function setSyncStatus(s) { syncStatus = s; }
+
+function updateSyncBar() {
+  const bar = $('syncBar');
+  if (!bar) return;
+
+  if (!fileHandle) {
+    bar.innerHTML = `<i class="fa-solid fa-database" style="color:var(--muted);font-size:.75rem"></i>
+      <span class="sync-fname">حفظ محلي فقط</span>
+      ${FS_SUPPORTED ? `<button class="sync-link-btn" onclick="chooseNewFile()"><i class="fa-solid fa-link"></i> ربط ملف</button>` : ''}`;
+    return;
+  }
+
+  const fname = fileHandle.name.length > 24 ? fileHandle.name.slice(0, 22) + '…' : fileHandle.name;
+  const dotCls = syncStatus;
+  const labels = { synced:'محفوظ', syncing:'جاري الحفظ…', unsaved:'تغييرات غير محفوظة', error:'خطأ في الحفظ', idle:'—' };
+  const colors  = { synced:'var(--teal)', syncing:'var(--gold)', unsaved:'var(--gold)', error:'var(--rose)', idle:'var(--muted)' };
+  const timeStr = lastSyncTime ? lastSyncTime.toLocaleTimeString('ar-EG',{hour:'2-digit',minute:'2-digit'}) : '';
+
+  bar.innerHTML = `<i class="fa-solid fa-file-lines" style="color:var(--gold);font-size:.78rem;flex-shrink:0"></i>
+    <span class="sync-fname">${fname}</span>
+    <span class="sync-status-wrap">
+      <span class="sync-dot ${dotCls}"></span>
+      <span class="sync-label" style="color:${colors[syncStatus]}">${labels[syncStatus]||'—'}</span>
+      ${timeStr ? `<span class="sync-time">${timeStr}</span>` : ''}
+    </span>
+    <button class="sync-mini-btn${syncStatus==='syncing'?' spinning':''}" id="syncBtn" onclick="syncToFile(true)" title="مزامنة الآن">
+      <i class="fa-solid fa-rotate"></i>
+    </button>`;
+}
+
+function renderFileSettings() {
+  const sta = $('fileStatus'), act = $('fileActions'), note = $('noFsNote');
+  if (!FS_SUPPORTED) {
+    sta.textContent = 'المتصفح لا يدعم ربط الملفات';
+    act.innerHTML = '';
+    note.style.display = 'flex';
+    return;
+  }
+  note.style.display = 'none';
+  if (fileHandle) {
+    const timeStr = lastSyncTime ? `آخر مزامنة: ${lastSyncTime.toLocaleString('ar-EG')}` : 'لم يتم المزامنة بعد';
+    sta.innerHTML = `<i class="fa-solid fa-file-lines" style="color:var(--gold)"></i> <strong>${fileHandle.name}</strong><br><span style="color:var(--muted);font-size:.7rem">${timeStr}</span>`;
+    act.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="file-btn teal" onclick="syncToFile(true);closeSheet('settings')"><i class="fa-solid fa-rotate"></i> مزامنة الآن</button>
+      <button class="file-btn rose" onclick="detachFile()"><i class="fa-solid fa-unlink"></i> فصل الملف</button>
+    </div>`;
+  } else {
+    sta.textContent = 'لا يوجد ملف مرتبط حالياً';
+    act.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="file-btn gold" onclick="chooseNewFile();closeSheet('settings')"><i class="fa-solid fa-file-plus"></i> ملف جديد</button>
+      <button class="file-btn teal" onclick="openExistingFile();closeSheet('settings')"><i class="fa-solid fa-folder-open"></i> فتح ملف</button>
+    </div>`;
+  }
+}
+
+/* ══════════════════════════════════════
+   WELCOME
+══════════════════════════════════════ */
+function showWelcome() {
+  $('welcome').classList.remove('hidden');
+  if (!FS_SUPPORTED) $('wCompatNote').style.display = 'flex';
+}
+function hideWelcome() { $('welcome').classList.add('hidden'); }
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+let toastTmr;
+function toast(msg, type = 'success') {
+  vib();
+  clearTimeout(toastTmr);
+  const t = $('toast'), ico = $('toastIco');
+  $('toastMsg').textContent = msg;
+  if (type === 'success') {
+    ico.style.cssText = 'width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;background:rgba(34,211,176,.2);color:var(--teal)';
+    ico.innerHTML = '<i class="fa-solid fa-check"></i>';
+  } else {
+    ico.style.cssText = 'width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;flex-shrink:0;background:rgba(255,107,138,.2);color:var(--rose)';
+    ico.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+  }
+  t.style.animation = 'none';
+  t.offsetHeight; // reflow
+  t.style.animation = 'toastIn .35s cubic-bezier(.16,1,.3,1) forwards';
+  t.style.opacity = '1';
+  toastTmr = setTimeout(() => {
+    t.style.animation = 'toastOut .28s ease forwards';
+    setTimeout(() => { t.style.opacity='0'; }, 280);
+  }, 3000);
+}
+
+/* ══════════════════════════════════════
+   RIPPLE
+══════════════════════════════════════ */
+function addRipple(e) {
+  const btn = e.currentTarget, rect = btn.getBoundingClientRect();
+  const d = Math.max(btn.offsetWidth, btn.offsetHeight);
+  const el = document.createElement('span');
+  el.className = 'ripple-el';
+  el.style.cssText = `width:${d}px;height:${d}px;top:${e.clientY-rect.top-d/2}px;left:${e.clientX-rect.left-d/2}px`;
+  btn.appendChild(el);
+  el.addEventListener('animationend', () => el.remove());
+}
+
+/* ══════════════════════════════════════
+   GREETING
+══════════════════════════════════════ */
+function updateGreeting() {
+  const h = new Date().getHours();
+  $('greetTxt').textContent = h < 12 ? 'صباح الخير ☀️' : h < 18 ? 'مساء الخير 🌤️' : 'مساء النور 🌙';
+}
+
+/* ══════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════ */
+function switchView(v) {
+  vib();
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const vEl = $(`view-${v}`); if(!vEl) return;
+  vEl.classList.add('active');
+  const nb = document.querySelector(`[data-v="${v}"]`);
+  if (nb) nb.classList.add('active');
+  closeFab();
+  if (v === 'home')      renderHome();
+  if (v === 'txs')       { $('txMonthLbl').textContent = monthLabel(txViewMonth); renderTxs(); }
+  if (v === 'wallets')   renderWallets();
+  if (v === 'debts')     renderDebts();
+  if (v === 'analytics') { $('aMonthLbl').textContent = monthLabel(analyticsMonth); renderAnalytics(); }
+}
+
+/* Month navigation */
+function prevMonth()  { txViewMonth = shiftMonth(txViewMonth,-1); $('txMonthLbl').textContent=monthLabel(txViewMonth); renderTxs(); }
+function nextMonth()  { const n=shiftMonth(txViewMonth,1); if(n<=curMonth()){txViewMonth=n;$('txMonthLbl').textContent=monthLabel(txViewMonth);renderTxs();} }
+function prevMonthA() { analyticsMonth=shiftMonth(analyticsMonth,-1); $('aMonthLbl').textContent=monthLabel(analyticsMonth); renderAnalytics(); }
+function nextMonthA() { const n=shiftMonth(analyticsMonth,1); if(n<=curMonth()){analyticsMonth=n;$('aMonthLbl').textContent=monthLabel(analyticsMonth);renderAnalytics();} }
+
+/* ══════════════════════════════════════
+   FAB
+══════════════════════════════════════ */
+function toggleFab() {
+  vib();
+  $('fabMenu').classList.toggle('open');
+  $('fabBtn').classList.toggle('open');
+}
+function closeFab() {
+  $('fabMenu').classList.remove('open');
+  $('fabBtn').classList.remove('open');
+}
+document.addEventListener('click', e => { if (!e.target.closest('.fab-wrap')) closeFab(); });
+
+/* ══════════════════════════════════════
+   SHEETS
+══════════════════════════════════════ */
+function openSheet(name) {
+  vib(); closeFab();
+  $('overlay').classList.add('show');
+  const s = $(`sheet-${name}`);
+  if (s) { s.classList.add('show'); document.body.style.overflow = 'hidden'; }
+}
+function closeSheet(name) {
+  const s = $(`sheet-${name}`);
+  if (s) s.classList.remove('show');
+  const any = document.querySelectorAll('.sheet.show').length > 0;
+  if (!any) { $('overlay').classList.remove('show'); document.body.style.overflow = ''; }
+}
+function closeAllSheets() {
+  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show'));
+  $('overlay').classList.remove('show');
+  document.body.style.overflow = '';
+  closeFab();
+}
+
+function openSettingsSheet() {
+  $('setCur').value = app.settings.currency;
+  renderFileSettings();
+  openSheet('settings');
+}
+
+/* ══════════════════════════════════════
+   TX SHEET
+══════════════════════════════════════ */
+function openTx(type) {
+  txTypeFixed = !!type;
+  closeAllSheets();
+  currentTxType = type || 'income';
+  currentRule = 'needs';
+
+  /* Reset form */
+  $('txAmt').value = '';
+  $('txCat').value = '';
+  $('txDate').value = today();
+  $('txWallet').innerHTML = app.wallets.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+
+  /* Type toggle visibility */
+  $('txTypeToggle').style.display = txTypeFixed ? 'none' : 'grid';
+  refreshTxTypeUI();
+
+  /* Category suggestions — safe encoding to avoid onclick injection */
+  const recent = [...new Set(app.txs.filter(t => t.type === currentTxType).map(t => t.cat))].slice(0, 8);
+  $('catChips').innerHTML = '';
+  recent.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'cat-chip';
+    chip.textContent = c;
+    chip.addEventListener('click', () => { $('txCat').value = c; });
+    $('catChips').appendChild(chip);
+  });
+
+  /* Rule pills — reset active state */
+  document.querySelectorAll('#ruleGroup .pill').forEach(p => {
+    p.className = 'pill' + (p.dataset.r === 'needs' ? ' a-needs' : '');
+  });
+
+  $('txTitle').textContent = currentTxType === 'income' ? 'إضافة دخل' : 'إضافة مصروف';
+  openSheet('tx');
+  setTimeout(() => $('txAmt').focus(), 460);
+}
+
+function refreshTxTypeUI() {
+  $('ttInc').className = 'tt' + (currentTxType === 'income' ? ' a-inc' : '');
+  $('ttExp').className = 'tt' + (currentTxType === 'expense' ? ' a-exp' : '');
+  $('ruleGroup').style.display = currentTxType === 'expense' ? 'block' : 'none';
+}
+
+function setTxType(t) {
+  if (txTypeFixed) return;
+  currentTxType = t;
+  refreshTxTypeUI();
+  $('txTitle').textContent = t === 'income' ? 'إضافة دخل' : 'إضافة مصروف';
+  /* Refresh category chips */
+  const recent = [...new Set(app.txs.filter(tx => tx.type === t).map(tx => tx.cat))].slice(0, 8);
+  $('catChips').innerHTML = '';
+  recent.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'cat-chip';
+    chip.textContent = c;
+    chip.addEventListener('click', () => { $('txCat').value = c; });
+    $('catChips').appendChild(chip);
+  });
+}
+
+function setRule(el) {
+  currentRule = el.dataset.r;
+  document.querySelectorAll('#ruleGroup .pill').forEach(p => {
+    p.className = 'pill' + (p.dataset.r === currentRule ? ` a-${currentRule}` : '');
+  });
+}
+
+/* ══════════════════════════════════════
+   FILTER
+══════════════════════════════════════ */
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.fchip').forEach(c => c.classList.toggle('active', c.dataset.f === f));
+  renderTxs();
+}
+
+/* ══════════════════════════════════════
+   DEBT TYPE
+══════════════════════════════════════ */
+function openDebtSheet() {
+  currentDebtType = 'lent';
+  $('dtLent').className = 'tt a-inc';
+  $('dtBorr').className = 'tt';
+  $('dPerson').value = '';
+  $('dAmt').value = '';
+  openSheet('debt');
+  setTimeout(() => $('dPerson').focus(), 460);
+}
+function setDebtType(t) {
+  currentDebtType = t;
+  $('dtLent').className = 'tt' + (t === 'lent' ? ' a-inc' : '');
+  $('dtBorr').className = 'tt' + (t === 'borrowed' ? ' a-exp' : '');
+}
+
+/* ══════════════════════════════════════
+   SAVE FUNCTIONS
+══════════════════════════════════════ */
+function persistSave() {
+  localStorage.setItem(LS_KEY, JSON.stringify(app));
+  scheduleSyncToFile();
+}
+
+function saveTx() {
+  const amt  = parseFloat($('txAmt').value);
+  const cat  = $('txCat').value.trim();
+  const wId  = parseInt($('txWallet').value);
+  const date = $('txDate').value;
+  if (!amt || amt <= 0) return toast('أدخل مبلغاً صحيحاً', 'error');
+  if (!cat)             return toast('أدخل البيان أو التصنيف', 'error');
+  if (!date)            return toast('اختر التاريخ', 'error');
+  const w = app.wallets.find(x => x.id === wId);
+  if (!w) return toast('اختر محفظة', 'error');
+  app.txs.push({ id: Date.now(), type: currentTxType, amount: amt, cat, wId, date, rule: currentTxType === 'expense' ? currentRule : '' });
+  if (currentTxType === 'income') w.balance += amt; else w.balance -= amt;
+  persistSave(); closeSheet('tx'); renderHome(); toast('تم الحفظ ✓');
+}
+
+function saveWallet() {
+  const name = $('wName').value.trim();
+  const bal  = parseFloat($('wBal').value) || 0;
+  if (!name) return toast('أدخل اسم المحفظة', 'error');
+  app.wallets.push({ id: Date.now(), name, balance: bal });
+  persistSave(); closeSheet('wallet'); renderWallets(); renderHome();
+  $('wName').value = ''; $('wBal').value = '';
+  toast('تم إنشاء المحفظة ✓');
+}
+
+function openTransfer() {
+  if (app.wallets.length < 2) { toast('تحتاج إلى محفظتين على الأقل', 'error'); return; }
+  const opts = app.wallets.map(w => `<option value="${w.id}">${w.name} (${fmt(w.balance)})</option>`).join('');
+  $('tFrom').innerHTML = opts;
+  $('tTo').innerHTML   = opts;
+  /* Pre-select different wallets */
+  if (app.wallets.length >= 2) $('tTo').value = String(app.wallets[1].id);
+  $('tAmt').value = '';
+  openSheet('transfer');
+  setTimeout(() => $('tAmt').focus(), 460);
+}
+function doTransfer() {
+  const from = parseInt($('tFrom').value), to = parseInt($('tTo').value), amt = parseFloat($('tAmt').value);
+  if (from === to)   return toast('اختر محفظتين مختلفتين', 'error');
+  if (!amt || amt <= 0) return toast('أدخل مبلغاً صحيحاً', 'error');
+  const wf = app.wallets.find(x => x.id === from), wt = app.wallets.find(x => x.id === to);
+  if (!wf || !wt) return;
+  wf.balance -= amt; wt.balance += amt;
+  persistSave(); closeSheet('transfer'); renderWallets(); renderHome(); toast('تم التحويل ✓');
+}
+
+function saveDebt() {
+  const person = $('dPerson').value.trim(), amt = parseFloat($('dAmt').value);
+  if (!person) return toast('أدخل اسم الشخص', 'error');
+  if (!amt || amt <= 0) return toast('أدخل مبلغاً صحيحاً', 'error');
+  app.debts.push({ id: Date.now(), type: currentDebtType, person, amount: amt, remain: amt, date: today() });
+  persistSave(); closeSheet('debt'); renderDebts(); toast('تم الحفظ ✓');
+}
+
+function openRepay(id) {
+  const d = app.debts.find(x => x.id === id); if (!d) return;
+  activeRepayId = id;
+  $('repayName').textContent = d.person;
+  $('repayRemain').textContent = fmt(d.remain) + ' ' + app.settings.currency;
+  $('repayAmt').value = '';
+  openSheet('repay');
+  setTimeout(() => $('repayAmt').focus(), 460);
+}
+function doRepay() {
+  const d = app.debts.find(x => x.id === activeRepayId); if (!d) return;
+  const amt = parseFloat($('repayAmt').value);
+  if (!amt || amt <= 0) return toast('أدخل مبلغاً صحيحاً', 'error');
+  if (amt > d.remain)   return toast('المبلغ أكبر من المتبقي', 'error');
+  d.remain = Math.round((d.remain - amt) * 1e10) / 1e10;
+  persistSave(); closeSheet('repay'); renderDebts(); toast('تم تحديث السداد ✓');
+}
+
+/* ══════════════════════════════════════
+   DELETE ACTIONS
+══════════════════════════════════════ */
+function deleteTx(id) {
+  showConfirm({
+    ico:'<i class="fa-solid fa-trash" style="color:var(--rose)"></i>',
+    icoBg:'rgba(255,107,138,.1)',
+    title:'حذف المعاملة؟',
+    msg:'سيتم عكس المبلغ في المحفظة المرتبطة',
+    ok:'حذف', okColor:'var(--rose)', okFg:'#fff',
+    cb: () => {
+      const idx = app.txs.findIndex(t => t.id === id); if (idx < 0) return;
+      const t = app.txs[idx], w = app.wallets.find(x => x.id === t.wId);
+      if (w) { if (t.type === 'income') w.balance -= t.amount; else w.balance += t.amount; }
+      app.txs.splice(idx, 1);
+      persistSave(); renderHome(); renderTxs(); renderWallets(); toast('تم الحذف');
+    }
+  });
+}
+function deleteDebt(id) {
+  showConfirm({
+    ico:'<i class="fa-solid fa-trash" style="color:var(--rose)"></i>',
+    icoBg:'rgba(255,107,138,.1)',
+    title:'حذف سجل الدين؟',
+    msg:'لن تتمكن من استعادة هذا السجل',
+    ok:'حذف', okColor:'var(--rose)', okFg:'#fff',
+    cb: () => { app.debts = app.debts.filter(x => x.id !== id); persistSave(); renderDebts(); toast('تم الحذف'); }
+  });
+}
+function deleteWallet(id) {
+  if (app.wallets.length <= 1) return toast('يجب الإبقاء على محفظة واحدة على الأقل', 'error');
+  showConfirm({
+    ico:'<i class="fa-solid fa-vault" style="color:var(--rose)"></i>',
+    icoBg:'rgba(255,107,138,.1)',
+    title:'حذف المحفظة؟',
+    msg:'لن تُحذف المعاملات المرتبطة بها',
+    ok:'حذف', okColor:'var(--rose)', okFg:'#fff',
+    cb: () => { app.wallets = app.wallets.filter(x => x.id !== id); persistSave(); renderWallets(); renderHome(); toast('تم الحذف'); }
+  });
+}
+function confirmClearAll() {
+  showConfirm({
+    ico:'<i class="fa-solid fa-bomb" style="color:var(--rose)"></i>',
+    icoBg:'rgba(255,107,138,.15)',
+    title:'مسح جميع البيانات؟',
+    msg:'ستُحذف جميع المعاملات والمحافظ والديون. لا يمكن التراجع.',
+    ok:'مسح الكل', okColor:'var(--rose)', okFg:'#fff',
+    cb: () => {
+      app = { settings:{ currency: app.settings.currency }, wallets:[{id:1,name:'المحفظة النقدية',balance:0}], txs:[], debts:[] };
+      persistSave(); closeSheet('settings'); switchView('home'); toast('تم مسح كل البيانات');
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   CONFIRM DIALOG
+══════════════════════════════════════ */
+function showConfirm({ ico, icoBg, title, msg, ok, okColor, okFg, cb }) {
+  $('cIco').innerHTML = ico;
+  $('cIco').style.background = icoBg || 'rgba(212,168,67,.1)';
+  $('cTitle').textContent = title;
+  $('cMsg').textContent   = msg;
+  $('cOk').textContent    = ok || 'تأكيد';
+  $('cOk').style.background = okColor || 'var(--gold)';
+  $('cOk').style.color = okFg || '#060B1A';
+  confirmCb = cb;
+  $('confirmDialog').classList.add('show');
+}
+function confirmDo()    { $('confirmDialog').classList.remove('show'); if (confirmCb) { confirmCb(); confirmCb = null; } }
+function confirmCancel(){ $('confirmDialog').classList.remove('show'); confirmCb = null; }
+
+/* ══════════════════════════════════════
+   SETTINGS SAVE
+══════════════════════════════════════ */
+function saveSettings() {
+  app.settings.currency = $('setCur').value.trim() || 'ج.م';
+  persistSave(); renderHome(); closeSheet('settings'); toast('تم حفظ الإعدادات ✓');
+}
+
+/* ══════════════════════════════════════
+   EXPORT / IMPORT
+══════════════════════════════════════ */
+function exportCSV() {
+  let csv = '\uFEFFالتاريخ,النوع,المبلغ,التصنيف,المحفظة,التصنيف_50_30_20\n';
+  app.txs.forEach(t => {
+    const wn = app.wallets.find(x => x.id === t.wId)?.name || '';
+    csv += `${t.date},${t.type === 'income' ? 'دخل' : 'مصروف'},${t.amount},"${String(t.cat).replace(/"/g,'""')}","${wn}",${t.rule || ''}\n`;
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  a.download = `mahfazati_${today()}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('جاري التصدير…');
+}
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(app, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `mahfazati_backup_${today()}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast('تم تنزيل النسخة الاحتياطية ✓');
+}
+function importJSON(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (!d.wallets || !d.txs || !d.debts) throw new Error('invalid');
+      app = d; ensureAppStructure();
+      persistSave(); switchView('home'); closeSheet('settings');
+      toast('تم الاستيراد بنجاح ✓');
+    } catch { toast('ملف غير صالح', 'error'); }
+    e.target.value = '';
+  };
+  r.readAsText(file);
+}
+
+/* ══════════════════════════════════════
+   ANIMATE NUMBER
+══════════════════════════════════════ */
+function animNum(id, target) {
+  const el = $(id); if (!el) return;
+  const raw = el.textContent.replace(/,/g, '');
+  const start = parseFloat(raw) || 0;
+  if (Math.abs(start - target) < 0.001) { el.textContent = fmt(target); return; }
+  const dur = 550, s = performance.now();
+  const ease = t => t < .5 ? 2*t*t : -1+(4-2*t)*t;
+  function step(now) {
+    const p = Math.min((now - s) / dur, 1);
+    el.textContent = fmt(start + (target - start) * ease(p));
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+/* ══════════════════════════════════════
+   RENDER: HOME
+══════════════════════════════════════ */
+function renderHome() {
+  const total = app.wallets.reduce((s, w) => s + w.balance, 0);
+  animNum('totalBal', total);
+  $('curBal').textContent = app.settings.currency;
+
+  const cm = curMonth();
+  let inc = 0, exp = 0;
+  app.txs.filter(t => t.date.startsWith(cm)).forEach(t => {
+    if (t.type === 'income') inc += t.amount; else exp += t.amount;
+  });
+  animNum('homeInc', inc); animNum('homeExp', exp);
+
+  const recent = [...app.txs].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+  if (!recent.length) {
+    $('recentList').innerHTML = `<div class="empty"><div class="empty-ico">💫</div><div class="empty-t">لا توجد معاملات بعد</div><div class="empty-s">ابدأ بتسجيل أول معاملة مالية</div></div>`;
+    return;
+  }
+  $('recentList').innerHTML = recent.map(txItemHtml).join('');
+}
+
+function txItemHtml(t) {
+  const isI = t.type === 'income';
+  const wn  = app.wallets.find(x => x.id === t.wId)?.name || '—';
+  return `<div class="tx-item">
+    <div class="tx-left">
+      <div class="tx-ico ${isI?'inc':'exp'}"><i class="fa-solid fa-${isI?'arrow-down':'arrow-up'}"></i></div>
+      <div>
+        <div class="tx-cat">${escHtml(t.cat)}</div>
+        <div class="tx-meta">${t.date} · ${escHtml(wn)}</div>
+      </div>
+    </div>
+    <div style="text-align:left">
+      <div class="tx-amt ${isI?'inc':'exp'}" dir="ltr">${isI?'+':'-'}${fmt(t.amount)}</div>
+      <button class="tx-del" onclick="deleteTx(${t.id})"><i class="fa-solid fa-trash-can"></i> حذف</button>
+    </div>
+  </div>`;
+}
+
+/* ══════════════════════════════════════
+   RENDER: TXS
+══════════════════════════════════════ */
+function renderTxs() {
+  const q = ($('searchInp')?.value || '').toLowerCase();
+  const list = app.txs.filter(t => {
+    if (!t.date.startsWith(txViewMonth)) return false;
+    if (currentFilter !== 'all' && t.type !== currentFilter) return false;
+    if (q && !t.cat.toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+  if (!list.length) {
+    $('txList').innerHTML = `<div class="empty"><div class="empty-ico">🔍</div><div class="empty-t">لا توجد نتائج</div><div class="empty-s">جرب تغيير الفلتر أو الشهر</div></div>`;
+    return;
+  }
+  $('txList').innerHTML = list.map(txItemHtml).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: WALLETS
+══════════════════════════════════════ */
+function renderWallets() {
+  if (!app.wallets.length) { $('walletsList').innerHTML = `<div class="empty"><div class="empty-ico">🏦</div><div class="empty-t">لا توجد محافظ</div></div>`; return; }
+  $('walletsList').innerHTML = app.wallets.map((w, i) => `
+    <div class="wallet-card wc-${i % 6}">
+      <div class="wallet-badge"><i class="fa-solid fa-vault" style="font-size:.68rem"></i>${escHtml(w.name)}</div>
+      <div class="wallet-bal"><span class="wallet-cur">${escHtml(app.settings.currency)}</span>${fmt(w.balance)}</div>
+      <button class="wallet-del" onclick="deleteWallet(${w.id})"><i class="fa-solid fa-trash-can"></i></button>
+    </div>`).join('');
+  /* Update transfer selects */
+  const opts = app.wallets.map(w => `<option value="${w.id}">${escHtml(w.name)}</option>`).join('');
+  $('tFrom').innerHTML = $('tTo').innerHTML = opts;
+  /* Show/hide transfer button */
+  $('transferBtn').style.display = app.wallets.length >= 2 ? 'flex' : 'none';
+}
+
+/* ══════════════════════════════════════
+   RENDER: DEBTS
+══════════════════════════════════════ */
+function renderDebts() {
+  let lent = 0, borr = 0;
+  app.debts.forEach(d => { if (d.remain > 0) { if (d.type === 'lent') lent += d.remain; else borr += d.remain; } });
+  animNum('totalLent', lent); animNum('totalBorr', borr);
+
+  if (!app.debts.length) {
+    $('debtsList').innerHTML = `<div class="empty"><div class="empty-ico">🤝</div><div class="empty-t">سجلك نظيف</div><div class="empty-s">لا توجد ديون مسجلة</div></div>`;
+    return;
+  }
+  $('debtsList').innerHTML = app.debts.sort((a,b) => b.remain - a.remain).map(d => {
+    const isL = d.type === 'lent', done = d.remain <= 0;
+    const paid = d.amount > 0 ? Math.min(100, (1 - d.remain / d.amount) * 100) : 100;
+    return `<div class="debt-card ${done ? 'debt-done' : ''}">
+      <button class="debt-del-btn" onclick="deleteDebt(${d.id})"><i class="fa-solid fa-xmark"></i></button>
+      <div class="debt-top">
+        <div><div class="debt-person">${escHtml(d.person)}</div><div class="debt-date">${d.date}</div></div>
+        <div class="debt-badge ${isL?'lent':'borr'}">${isL?'أقرضته':'استلفت'}</div>
+      </div>
+      <div class="debt-track"><div class="debt-fill ${isL?'lent':'borr'}" style="width:${paid}%"></div></div>
+      <div class="debt-nums">
+        <span>متبقي: <span class="mono">${fmt(d.remain)}</span></span>
+        <span>من: <span class="mono">${fmt(d.amount)}</span></span>
+      </div>
+      <div class="debt-foot">
+        ${!done
+          ? `<button class="pay-btn ${isL?'lent':'borr'}" onclick="openRepay(${d.id})"><i class="fa-solid fa-money-bill-wave"></i> سداد دفعة</button>`
+          : `<span class="done-badge"><i class="fa-solid fa-check"></i> مكتمل</span>`}
+        <span style="font-size:.7rem;color:var(--muted)">${Math.round(paid)}% مُسدَّد</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER: ANALYTICS
+══════════════════════════════════════ */
+function renderAnalytics() {
+  const m = analyticsMonth;
+  let inc = 0, needs = 0, wants = 0, savings = 0;
+  app.txs.filter(t => t.date.startsWith(m)).forEach(t => {
+    if (t.type === 'income') { inc += t.amount; return; }
+    if (t.rule === 'wants')   wants   += t.amount;
+    else if (t.rule === 'savings') savings += t.amount;
+    else                      needs   += t.amount;
+  });
+  const exp = needs + wants + savings, net = inc - exp;
+  const savePct = inc > 0 ? Math.round((net / inc) * 100) : 0;
+
+  $('aInc').textContent = fmt(inc); $('aExp').textContent = fmt(exp);
+  $('aNet').textContent = fmt(net); $('aNet').style.color = net >= 0 ? 'var(--teal)' : 'var(--rose)';
+  $('aSavePct').textContent = savePct + '%';
+  $('donutTotal').textContent = fmt(exp);
+
+  /* Donut — destroy then recreate on fresh canvas */
+  const donutCtx = $('donutChart').getContext('2d');
+  if (donutChartInst) { donutChartInst.destroy(); donutChartInst = null; }
+  Chart.defaults.color = '#5A6A8A';
+  Chart.defaults.font.family = "'IBM Plex Sans Arabic', sans-serif";
+  donutChartInst = new Chart(donutCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['أساسيات','رغبات','ادخار'],
+      datasets: [{ data: [needs||.001, wants||.001, savings||.001], backgroundColor: ['#818CF8','#D946EF','#22D3B0'], borderWidth: 0, hoverOffset: 5 }]
+    },
+    options: {
+      cutout: '78%', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { backgroundColor: 'rgba(6,11,26,.95)', padding: 10, titleFont: { weight: 'bold' } }
+      }
+    }
+  });
+
+  /* Rule bars */
+  const ruleBar = (val, max, cls, lbl, over) => {
+    const pct = inc === 0 ? 0 : Math.min(100, (val / Math.max(max,.001)) * 100);
+    const colors = { needs:'#818CF8', wants:'#D946EF', savings:'#22D3B0' };
+    const fill  = (val > max && inc > 0) ? 'var(--rose)' : colors[cls];
+    return `<div class="rule-item">
+      <div class="rule-head">
+        <span>${lbl}</span>
+        <span style="font-family:'Space Mono',monospace;${val>max&&inc>0?'color:var(--rose)':''}">${fmt(val)} <span style="color:var(--muted);font-size:.7rem">/ ${fmt(max)}</span></span>
+      </div>
+      <div class="rule-track"><div class="rule-fill" style="width:${pct}%;background:${fill}"></div></div>
+    </div>`;
+  };
+  $('ruleBars').innerHTML = ruleBar(needs, inc*.5, 'needs', 'الأساسيات — 50%') + ruleBar(wants, inc*.3, 'wants', 'الرغبات — 30%') + ruleBar(savings, inc*.2, 'savings', 'الادخار — 20%');
+
+  /* Bar chart */
+  const barCtx = $('barChart').getContext('2d');
+  if (barChartInst) { barChartInst.destroy(); barChartInst = null; }
+  const months = [], incData = [], expData = [];
+  for (let i = 5; i >= 0; i--) {
+    const dm = shiftMonth(m, -i);
+    months.push(MONTH_NAMES[parseInt(dm.split('-')[1])-1].slice(0,3));
+    let mi = 0, me = 0;
+    app.txs.filter(t => t.date.startsWith(dm)).forEach(t => { if(t.type==='income') mi+=t.amount; else me+=t.amount; });
+    incData.push(mi); expData.push(me);
+  }
+  barChartInst = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: months,
+      datasets: [
+        { label: 'دخل',    data: incData, backgroundColor: 'rgba(34,211,176,.5)',  borderRadius: 5, borderSkipped: false },
+        { label: 'مصروف', data: expData, backgroundColor: 'rgba(255,107,138,.5)', borderRadius: 5, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 14, color: '#5A6A8A' } }, tooltip: { backgroundColor: 'rgba(6,11,26,.95)', padding: 10 } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: '#5A6A8A' }, border: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,.04)' }, ticks: { color: '#5A6A8A' }, border: { display: false } }
+      }
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   UTILITIES
+══════════════════════════════════════ */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function ensureAppStructure() {
+  if (!app.settings)        app.settings  = { currency: 'ج.م' };
+  if (!app.settings.currency) app.settings.currency = 'ج.م';
+  if (!Array.isArray(app.wallets) || !app.wallets.length) app.wallets = [{ id: 1, name: 'المحفظة النقدية', balance: 0 }];
+  if (!Array.isArray(app.txs))    app.txs   = [];
+  if (!Array.isArray(app.debts))  app.debts = [];
+}
+
+/* ══════════════════════════════════════
+   BALANCE CARD 3D TILT (desktop)
+══════════════════════════════════════ */
+(function() {
+  const card = $('balCard');
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width  - .5;
+    const y = (e.clientY - r.top)  / r.height - .5;
+    card.style.transform = `perspective(900px) rotateY(${x*5}deg) rotateX(${-y*3.5}deg)`;
+  });
+  card.addEventListener('mouseleave', () => { card.style.transform = ''; });
+})();
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+async function init() {
+  updateGreeting();
+  txViewMonth  = curMonth();
+  analyticsMonth = curMonth();
+
+  /* Open IDB */
+  try { await idb.open(); } catch(e) { console.warn('IDB unavailable:', e); }
+
+  /* Load data from localStorage */
+  try {
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) { app = JSON.parse(saved); ensureAppStructure(); }
+  } catch(e) { console.warn('LS error:', e); }
+
+  /* Try to restore file handle from IDB */
+  if (FS_SUPPORTED) {
+    try {
+      const storedHandle = await idb.get('fileHandle');
+      if (storedHandle) {
+        const granted = await verifyPermission(storedHandle);
+        if (granted) {
+          fileHandle = storedHandle;
+          const ok = await loadFromFile();
+          if (ok) {
+            lastSyncTime = new Date();
+            setSyncStatus('synced');
+          } else {
+            setSyncStatus('error');
+          }
+          startAutoSync();
+        } else {
+          /* Permission not granted — show reconnect hint */
+          setSyncStatus('error');
+          fileHandle = storedHandle; /* keep for reconnect option */
+        }
+      }
+    } catch(e) { console.warn('File handle restore error:', e); }
+  }
+
+  updateSyncBar();
+
+  /* Show welcome only if completely new user (no data and no file) */
+  const hasData = app.txs.length > 0 || app.debts.length > 0 || app.wallets.some(w => w.balance !== 0);
+  if (!hasData && !fileHandle) {
+    showWelcome();
+  }
+
+  switchView('home');
+}
+
+window.addEventListener('load', init);
+
+/* Sync before page unload */
+window.addEventListener('beforeunload', () => {
+  if (fileHandle && syncStatus !== 'synced') {
+    syncToFile(true);
+  }
+});
+
+/* Handle page visibility — sync when tab becomes active */
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && fileHandle && syncStatus === 'unsaved') {
+    syncToFile();
+  }
+});
+</script>
+</body>
+</html>

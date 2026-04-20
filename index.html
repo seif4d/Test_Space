@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEIF X DEBIAN | The Identity Matrix</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        /* --- CSS VARIABLES & BASE STYLES --- */
+        :root {
+            --bg-color: #000000;
+            --primary-red: #A81D33;
+            --text-color: #E0E0E0;
+            --green-accent: #00ff41;
+            --border-color: rgba(168, 29, 51, 0.3);
+            --terminal-bg: rgba(10, 10, 10, 0.6);
+            --font-mono: 'Space Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            overflow-x: hidden;
+            background-image: 
+                linear-gradient(rgba(168, 29, 51, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(168, 29, 51, 0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: moveGrid 20s linear infinite;
+        }
+
+        @keyframes moveGrid {
+            from { background-position: 0 0; }
+            to { background-position: 30px 30px; }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        /* --- BOOTLOADER / PRELOADER --- */
+        #bootloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            padding: 1rem;
+        }
+        
+        #boot-text span {
+            white-space: pre;
+        }
+
+        .boot-cursor {
+            display: inline-block;
+            width: 12px;
+            height: 1.5rem;
+            background-color: var(--green-accent);
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* Hide main content initially */
+        .main-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+        }
+        .main-content.loaded {
+            display: block;
+            opacity: 1;
+        }
+
+        /* --- HEADER & NAVIGATION --- */
+        .main-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 1rem 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .main-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-red);
+            text-shadow: 0 0 5px var(--primary-red);
+            text-decoration: none;
+        }
+        .main-nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+        .main-nav a:hover {
+            color: var(--primary-red);
+            text-shadow: 0 0 8px var(--primary-red);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding-top: 100px; /* Offset for header */
+        }
+        .glitch-banner {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+        .hero h3 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: var(--text-color);
+            margin-bottom: 1rem;
+        }
+        .hero h3 span { color: var(--primary-red); }
+        .social-badges a {
+            margin: 0 0.5rem;
+        }
+        .quote {
+            margin-top: 2rem;
+            max-width: 700px;
+            font-style: italic;
+            color: #aaa;
+            border-left: 3px solid var(--primary-red);
+            padding-left: 1rem;
+        }
+
+        /* --- TERMINAL SECTION STYLING --- */
+        .terminal-section {
+            margin: 6rem 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .terminal-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .terminal-window {
+            background: var(--terminal-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(168, 29, 51, 0.2);
+            backdrop-filter: blur(5px);
+            overflow: hidden;
+        }
+        .terminal-header {
+            background: #1a1a1a;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .terminal-header .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green { background: #27c93f; }
+        .terminal-title {
+            color: #bbb;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            font-size: 0.9rem;
+        }
+        .prompt {
+            color: var(--green-accent);
+        }
+        .command {
+            color: var(--text-color);
+        }
+        .output {
+            color: #ccc;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .section-separator {
+            border: 0;
+            height: 1px;
+            background: var(--border-color);
+            margin: 3rem auto;
+            width: 50%;
+        }
+
+        /* --- ARSENAL SECTION (CAPABILITIES) --- */
+        .capabilities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+        .capability-card {
+            border: 1px solid var(--border-color);
+            background: var(--terminal-bg);
+            border-radius: 5px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .capability-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px var(--primary-red);
+        }
+        .capability-header {
+            padding: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .capability-header i { color: var(--primary-red); margin-right: 0.5rem; }
+        .capability-content {
+            padding: 1rem;
+            display: none;
+            border-top: 1px solid var(--border-color);
+        }
+        .capability-card.open .capability-content {
+            display: block;
+        }
+        .capability-card.open .toggle-icon { transform: rotate(180deg); }
+        .toggle-icon { transition: transform 0.3s; }
+        .capability-content p { color: #aaa; margin-bottom: 1rem; font-size: 0.9em; }
+        .capability-content ul { list-style: none; }
+        .capability-content li::before {
+            content: ">>";
+            color: var(--primary-red);
+            margin-right: 10px;
+        }
+
+        /* --- MISSION LOGS (PROJECTS) --- */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .project-card {
+            border: 1px solid var(--border-color);
+            background: var(--terminal-bg);
+            border-radius: 5px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px var(--primary-red);
+        }
+        .project-title a {
+            font-size: 1.3rem;
+            color: var(--primary-red);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .project-subtitle {
+            font-style: italic;
+            color: #aaa;
+            margin-bottom: 1rem;
+        }
+        .project-card p {
+            flex-grow: 1;
+        }
+        .project-tags {
+            margin-top: 1rem;
+            text-align: right;
+        }
+        .project-tags code {
+            background: rgba(168, 29, 51, 0.2);
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        /* --- FOOTER --- */
+        .main-footer {
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border-color);
+        }
+        .footer-shutdown {
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+
+        /* --- RESPONSIVE DESIGN --- */
+        @media (max-width: 768px) {
+            .main-nav { display: none; } /* Simple approach for mobile */
+            .projects-grid { grid-template-columns: 1fr; }
+            #bootloader { font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BOOTLOADER SCREEN -->
+    <div id="bootloader">
+        <div id="boot-text"></div>
+    </div>
+
+    <!-- MAIN CONTENT (Initially Hidden) -->
+    <div class="main-content">
+        <header class="main-header">
+            <div class="container">
+                <a href="#" class="logo">&gt; SEIF_X_DEBIAN</a>
+                <nav class="main-nav">
+                    <a href="#identity_matrix">[ROOT_ACCESS]</a>
+                    <a href="#system_capabilities">[CAPABILITIES]</a>
+                    <a href="#mission_logs">[MISSION_LOGS]</a>
+                </nav>
+            </div>
+        </header>
+
+        <main class="container">
+            <!-- HERO SECTION -->
+            <section class="hero">
+                <img src="https://capsule-render.vercel.app/api?type=transparent&height=120&section=header&text=S%20E%20I%20F%20%20%20X%20%20%20D%20E%20B%20I%20A%20N&fontSize=60&fontColor=ffffff&animation=twinkling" alt="SEIF X DEBIAN" class="glitch-banner"/>
+                <h3>👑 <span>MusliM</span> • POLYMATHIC ARCHITECT • <span>CYBER GHOST</span> • VISUAL STORYTELLER</h3>
+                <div class="social-badges">
+                    <a href="mailto:your.email@example.com"><img src="https://img.shields.io/badge/SECURE_COMMS-000000?style=for-the-badge&logo=protonmail&logoColor=white" alt="Email"/></a>
+                    <a href="https://twitter.com/seif4d"><img src="https://img.shields.io/badge/X_NETWORK-000000?style=for-the-badge&logo=x&logoColor=white" alt="X"/></a>
+                    <a href="https://youtube.com/@0x47md"><img src="https://img.shields.io/badge/VISUAL_INTEL-A81D33?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube"/></a>
+                </div>
+                <p class="quote">"I do not adapt to the matrix; I write its source code. From architecting corporate empires to shattering network defenses and designing digital art—I operate where logic meets aesthetic."</p>
+            </section>
+
+            <hr class="section-separator">
+
+            <!-- IDENTITY MATRIX SECTION -->
+            <section class="terminal-section" id="identity_matrix">
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+                        <span class="terminal-title">/dev/identity_matrix</span>
+                    </div>
+                    <div class="terminal-body">
+                        <p><span class="prompt">root@debian:~#</span> <span class="command">./extract_profile --target seif4d</span></p>
+                        <pre class="output">
+[+] Extracted Roles:
+    ├── Executive    : CEO @Scope | CEO @Dragon (Leading digital ecosystems)
+    ├── Engineering  : Full-Stack Dev | Software Engineer | AI Integrator
+    ├── Security     : Penetration Tester | Network Engineer | Threat Hunter
+    └── Creative     : Video Editor | UI/UX Designer | Writer | Content Creator
+[+] Status: Fully Operational.
+                        </pre>
+                        <p class="output" style="margin-top: 1rem;">
+                            I am an anomaly in the tech space. Operating out of Egypt, my foundation is built on a solid Islamic Core, which fuels my discipline. I don't just build apps; I build companies. I don't just use tools; I dissect them.
+                        </p>
+                    </div>
+                </div>
+            </section>
+            
+            <hr class="section-separator">
+
+            <!-- SYSTEM CAPABILITIES SECTION -->
+            <section class="terminal-section" id="system_capabilities">
+                 <h2 class="terminal-title" style="font-size: 1.5rem; margin-bottom: 2rem; text-align: left;">⚙️ [SYSTEM_CAPABILITIES]: THE ARSENAL</h2>
+                 <div class="capabilities-grid">
+                    <!-- Card 1 -->
+                    <div class="capability-card open">
+                        <div class="capability-header">
+                            <span><i class="fa-solid fa-crown"></i> EXECUTIVE & LOGIC</span>
+                            <span class="toggle-icon"><i class="fa-solid fa-chevron-down"></i></span>
+                        </div>
+                        <div class="capability-content">
+                            <p>Operating at the highest level of abstraction. Leading teams, managing products, and researching AI logic to serve the Ummah.</p>
+                            <ul>
+                                <li>Leadership: CEO @Scope, CEO @Dragon</li>
+                                <li>AI & Research: Open-Source LLMs</li>
+                                <li>PKM Mastery: Logseq Pioneer</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                     <div class="capability-card">
+                        <div class="capability-header">
+                            <span><i class="fa-solid fa-shield-halved"></i> OFFENSIVE SECURITY</span>
+                            <span class="toggle-icon"><i class="fa-solid fa-chevron-down"></i></span>
+                        </div>
+                        <div class="capability-content">
+                            <p>Finding the unseen. Breaking the unbreakable.</p>
+                            <ul>
+                                <li>Network Warfare: Kali, Debian, Cisco</li>
+                                <li>Penetration Testing: Web App Sec</li>
+                                <li>System Admin: Bash, Linux Kernel</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="capability-card">
+                        <div class="capability-header">
+                            <span><i class="fa-solid fa-code"></i> FULL-STACK ARCHITECTURE</span>
+                            <span class="toggle-icon"><i class="fa-solid fa-chevron-down"></i></span>
+                        </div>
+                        <div class="capability-content">
+                            <p>Building robust, scalable, and pixel-perfect environments.</p>
+                            <ul>
+                                <li>Core Web: HTML5, CSS3, Vanilla JS</li>
+                                <li>Engineering: Clean Code, System Design</li>
+                                <li>API Integration</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <!-- Card 4 -->
+                    <div class="capability-card">
+                        <div class="capability-header">
+                            <span><i class="fa-solid fa-palette"></i> THE CREATIVE FORGE</span>
+                            <span class="toggle-icon"><i class="fa-solid fa-chevron-down"></i></span>
+                        </div>
+                        <div class="capability-content">
+                            <p>Engineering human perception through visual art and storytelling.</p>
+                            <ul>
+                                <li>Post-Production: Premiere Pro, VFX</li>
+                                <li>Design: Figma, UI/UX Architecture</li>
+                                <li>Content: YouTube, Islamic Da'wah</li>
+                            </ul>
+                        </div>
+                    </div>
+                 </div>
+            </section>
+
+            <hr class="section-separator">
+
+            <!-- MISSION LOGS SECTION -->
+            <section class="terminal-section" id="mission_logs">
+                <h2 class="terminal-title" style="font-size: 1.5rem; margin-bottom: 2rem; text-align: left;">📂 [DECLASSIFIED_OPS]: MISSION LOGS</h2>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <h4 class="project-title"><a href="https://github.com/seif4d/GPT-Quran" target="_blank">🩸 GPT-Quran</a></h4>
+                        <p class="project-subtitle">"The Digital Sanctuary"</p>
+                        <p>A flawlessly engineered, interactive Quranic companion built entirely with pure Vanilla JS. Aesthetic UI meets spiritual utility.</p>
+                        <div class="project-tags"><code>Full-Stack</code> <code>UI/UX</code></div>
+                    </div>
+                     <div class="project-card">
+                        <h4 class="project-title"><a href="https://github.com/seif4d/Tasbih" target="_blank">🩸 Tasbih (Dark World)</a></h4>
+                        <p class="project-subtitle">"Gamified Supplication"</p>
+                        <p>Supplication meets the Matrix. A dark-themed, gamified digital world built to protect the soul using visual shield mechanics.</p>
+                        <div class="project-tags"><code>Front-End</code> <code>Game Logic</code></div>
+                    </div>
+                    <div class="project-card">
+                        <h4 class="project-title"><a href="https://github.com/seif4d/OldHarmed" target="_blank">🩸 OldHarmed</a></h4>
+                        <p class="project-subtitle">"E-Commerce Elegance"</p>
+                        <p>A highly responsive, modern front-end architecture designed for a premium medical wear storefront.</p>
+                        <div class="project-tags"><code>Web Design</code> <code>Architecture</code></div>
+                    </div>
+                    <div class="project-card">
+                        <h4 class="project-title"><a href="https://github.com/seif4d/examz" target="_blank">🩸 Examz (Assiut Univ)</a></h4>
+                        <p class="project-subtitle">"Precision Utility"</p>
+                        <p>An optimized, fast-loading schedule infrastructure built specifically for Sports Science students.</p>
+                        <div class="project-tags"><code>Utility App</code> <code>Optimization</code></div>
+                    </div>
+                </div>
+            </section>
+            
+            <hr class="section-separator">
+            
+            <!-- STATS SECTION -->
+            <section class="terminal-section" id="live_telemetry">
+                 <h2 class="terminal-title" style="font-size: 1.5rem; margin-bottom: 2rem; text-align: left;">🎛️ [LIVE_TELEMETRY]: NETWORK STATS</h2>
+                 <div style="text-align: center;">
+                     <img src="https://github-readme-stats.vercel.app/api?username=seif4d&show_icons=true&theme=tokyonight&hide_border=true&bg_color=000000&title_color=A81D33&icon_color=A81D33&text_color=ffffff" alt="Stats" style="max-width: 100%; margin-bottom: 1rem;" />
+                     <img src="https://github-readme-streak-stats.herokuapp.com/?user=seif4d&theme=tokyonight&hide_border=true&background=000000&ring=A81D33&fire=A81D33&currStreakNum=ffffff&sideNums=ffffff&currStreakLabel=A81D33" alt="Streak" style="max-width: 100%;" />
+                 </div>
+            </section>
+        </main>
+
+        <footer class="main-footer">
+            <div class="container">
+                <p class="footer-shutdown"><code>[SYSTEM_SHUTDOWN]: May our code be clean, our networks secure, and our intentions pure.</code></p>
+                <a href="https://github.com/seif4d">
+                    <img src="https://komarev.com/ghpvc/?username=seif4d&label=SYSTEM_INTRUSIONS&color=A81D33&style=for-the-badge" alt="Views" />
+                </a>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- BOOTLOADER SCRIPT ---
+            const bootloader = document.getElementById('bootloader');
+            const bootTextEl = document.getElementById('boot-text');
+            const mainContent = document.querySelector('.main-content');
+            
+            const bootLines = [
+                "[+SYSTEM+ONLINE+]",
+                "[+AUTHENTICATING+ROOT+USER...+]",
+                "[+WELCOME,+SEIF_X_DEBIAN+]",
+                "[+ENCRYPTED_SOUL.MUSLIM_CORE+]",
+                "[+INITIATING+UI... DONE+]"
+            ];
+            
+            let lineIndex = 0;
+            let charIndex = 0;
+
+            function typeBootLine() {
+                if (lineIndex < bootLines.length) {
+                    const currentLine = bootLines[lineIndex];
+                    if (charIndex < currentLine.length) {
+                        bootTextEl.innerHTML = `<span>${currentLine.substring(0, charIndex + 1)}</span><span class="boot-cursor"></span>`;
+                        charIndex++;
+                        setTimeout(typeBootLine, 50);
+                    } else {
+                        bootTextEl.innerHTML += '<br>';
+                        charIndex = 0;
+                        lineIndex++;
+                        setTimeout(typeBootLine, 500); // Pause between lines
+                    }
+                } else {
+                    // Animation finished
+                    setTimeout(() => {
+                        bootloader.style.transition = 'opacity 0.5s ease-out';
+                        bootloader.style.opacity = '0';
+                        mainContent.classList.add('loaded');
+                        setTimeout(() => bootloader.style.display = 'none', 500);
+                    }, 500);
+                }
+            }
+            typeBootLine();
+
+            // --- SCROLL ANIMATION SCRIPT ---
+            const sections = document.querySelectorAll('.terminal-section');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // --- CAPABILITY CARD TOGGLE SCRIPT ---
+            const capabilityCards = document.querySelectorAll('.capability-card');
+            capabilityCards.forEach(card => {
+                const header = card.querySelector('.capability-header');
+                header.addEventListener('click', () => {
+                    card.classList.toggle('open');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
